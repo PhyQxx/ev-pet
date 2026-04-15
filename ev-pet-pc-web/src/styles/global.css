@@ -1,0 +1,123 @@
+/* EV Pet PC Web 全局样式 */
+
+:root {
+  /* 马卡龙色系 */
+  --primary: #FFB3C6;
+  --primary-dark: #FF8FAB;
+  --primary-light: #FFD5E5;
+  
+  --secondary: #A8D8EA;
+  --secondary-dark: #7EC8D8;
+  --secondary-light: #D5E8F0;
+  
+  --accent-yellow: #FFE5A0;
+  --accent-yellow-dark: #FFD166;
+  --accent-yellow-light: #FFF4C2;
+  
+  --accent-purple: #D5AAFF;
+  --accent-purple-dark: #C48FFF;
+  --accent-purple-light: #EDE4FF;
+  
+  --accent-green: #B8F1CC;
+  --accent-coral: #FFACA8;
+  
+  /* 文字色 */
+  --text-primary: #4A3F55;
+  --text-secondary: #7A6B8A;
+  --text-placeholder: #A898B8;
+  
+  /* 状态色 */
+  --success: #4ECDC4;
+  --warning: #FFE66D;
+  --danger: #FF6B6B;
+  
+  /* 背景 */
+  --bg-page: #F8F5FF;
+  --bg-card: #FFFFFF;
+  --bg-header: #FFFFFF;
+  
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 30px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 4px 12px rgba(213, 170, 255, 0.15);
+  --shadow-md: 0 8px 24px rgba(213, 170, 255, 0.2);
+  --shadow-lg: 0 16px 48px rgba(213, 170, 255, 0.25);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+}
+
+/* 渐变按钮 */
+.btn-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent-purple) 100%);
+  border: none;
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 页面容器 */
+.page-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Flex工具 */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 8px; }
+.gap-4 { gap: 16px; }
+.gap-6 { gap: 24px; }
+
+/* Element Plus 覆盖 */
+.el-button--primary {
+  --el-button-bg-color: var(--primary);
+  --el-button-border-color: var(--primary);
+  --el-button-hover-bg-color: var(--primary-dark);
+  --el-button-hover-border-color: var(--primary-dark);
+}
+
+.el-input__wrapper {
+  border-radius: var(--radius-md);
+}
+
+.el-card {
+  border-radius: var(--radius-lg);
+  border: none;
+  box-shadow: var(--shadow-sm);
+}

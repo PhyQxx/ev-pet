@@ -1,0 +1,31 @@
+server:
+  port: 8099
+
+spring:
+  datasource:
+    url: jdbc:mysql://172.20.0.2:3306/ev_pet?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 172.20.0.1
+      port: 6380
+      database: 0
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: ev-pet-secret-key-2026-04-15-change-in-production
+  expiration: 604800000
+
+minimax:
+  api-url: https://api.minimax.chat/v1/text/chatcompletion_v2
+  api-key: ${MINIMAX_API_KEY:your-api-key-here}
+  group-id: ${MINIMAX_GROUP_ID:your-group-id-here}

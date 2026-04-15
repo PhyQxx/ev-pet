@@ -1,0 +1,111 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/social/social",
+      "style": {
+        "navigationBarTitleText": "社交中心",
+        "navigationBarBackgroundColor": "#FFF9FB"
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/care/care",
+      "style": {
+        "navigationBarTitleText": "养成",
+        "navigationBarBackgroundColor": "#FFD5E5"
+      }
+    },
+    {
+      "path": "pages/chat/chat",
+      "style": {
+        "navigationBarTitleText": "AI对话",
+        "navigationBarBackgroundColor": "#EDE4FF"
+      }
+    },
+    {
+      "path": "pages/shop/shop",
+      "style": {
+        "navigationBarTitleText": "商店",
+        "navigationBarBackgroundColor": "#FFF4C2"
+      }
+    },
+    {
+      "path": "pages/mine/mine",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackgroundColor": "#D5E8F0"
+      }
+    },
+    {
+      "path": "pages/achievement/achievement",
+      "style": {
+        "navigationBarTitleText": "成就系统",
+        "navigationBarBackgroundColor": "#FFF9FB"
+      }
+    },
+    {
+      "path": "pages/work/work",
+      "style": {
+        "navigationBarTitleText": "打工系统",
+        "navigationBarBackgroundColor": "#F5EEF8"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#7A6B8A",
+    "selectedColor": "#FFB3C6",
+    "borderStyle": "white",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/care/care",
+        "text": "养成",
+        "iconPath": "static/tabbar/care.png",
+        "selectedIconPath": "static/tabbar/care-active.png"
+      },
+      {
+        "pagePath": "pages/chat/chat",
+        "text": "对话",
+        "iconPath": "static/tabbar/chat.png",
+        "selectedIconPath": "static/tabbar/chat-active.png"
+      },
+      {
+        "pagePath": "pages/shop/shop",
+        "text": "商店",
+        "iconPath": "static/tabbar/shop.png",
+        "selectedIconPath": "static/tabbar/shop-active.png"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的",
+        "iconPath": "static/tabbar/mine.png",
+        "selectedIconPath": "static/tabbar/mine-active.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "EV Pet",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F8F8"
+  }
+}

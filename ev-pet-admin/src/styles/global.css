@@ -1,0 +1,39 @@
+/* EV Pet Admin 全局样式 */
+:root {
+  --primary: #FFB3C6;
+  --primary-dark: #FF8FAB;
+  --primary-light: #FFD5E5;
+  --secondary: #A8D8EA;
+  --accent-purple: #D5AAFF;
+  --accent-yellow: #FFE5A0;
+  --text-primary: #2C3E50;
+  --text-secondary: #7A6B8A;
+  --bg-page: #F5F7FA;
+  --bg-card: #FFFFFF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Noto Sans SC', -apple-system, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+.el-aside {
+  background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%);
+}
+
+.el-menu {
+  border-right: none;
+  background: transparent;
+}
+
+.el-menu-item {
+  color: rgba(255,255,255,0.7);
+}
+
+.el-menu-item:hover, .el-menu-item.is-active {
+  background: rgba(255,179,198,0.2);
+  color: var(--primary);
+}
