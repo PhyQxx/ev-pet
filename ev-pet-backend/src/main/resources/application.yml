@@ -1,5 +1,5 @@
 server:
-  port: 8099
+  port: 19081
 
 spring:
   datasource:
@@ -24,8 +24,3 @@ mybatis-plus:
 jwt:
   secret: ev-pet-secret-key-2026-04-15-change-in-production
   expiration: 604800000
-
-minimax:
-  api-url: https://api.minimax.chat/v1/text/chatcompletion_v2
-  api-key: ${MINIMAX_API_KEY:your-api-key-here}
-  group-id: ${MINIMAX_GROUP_ID:your-group-id-here}

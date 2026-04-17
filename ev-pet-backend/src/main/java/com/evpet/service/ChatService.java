@@ -13,7 +13,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,15 +29,7 @@ public class ChatService {
     private final ChatMessageMapper chatMessageMapper;
     private final PetMapper petMapper;
     private final ContentFilterUtil contentFilter;
-
-    @Value("${minimax.api-url}")
-    private String apiUrl;
-
-    @Value("${minimax.api-key}")
-    private String apiKey;
-
-    @Value("${minimax.group-id}")
-    private String groupId;
+    private final SystemConfigService systemConfigService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -108,6 +99,14 @@ public class ChatService {
 
     private String callMiniMax(String context, List<ChatMessage> history, String userInput) {
         try {
+            String apiUrl = systemConfigService.getByKeyOrDefault("ai_api_url", "https://api.minimax.chat/v1/text/chatcompletion_v2");
+            String apiKey = systemConfigService.getByKey("ai_api_key");
+
+            if (apiKey == null || apiKey.isEmpty()) {
+                log.warn("AI API密钥未配置，使用降级回复");
+                return getDefaultResponse(userInput);
+            }
+
             OkHttpClient client = new OkHttpClient.Builder()
                     .connectTimeout(30, TimeUnit.SECONDS)
                     .readTimeout(30, TimeUnit.SECONDS)
@@ -138,8 +137,9 @@ public class ChatService {
     }
 
     private String buildRequestBody(String context, List<ChatMessage> history, String userInput) {
+        String model = systemConfigService.getByKeyOrDefault("ai_model", "MiniMax-Text-01");
         StringBuilder sb = new StringBuilder();
-        sb.append("{\"model\":\"MiniMax-Text-01\",\"messages\":[");
+        sb.append("{\"model\":\"").append(escapeJson(model)).append("\",\"messages\":[");
         sb.append("{\"role\":\"system\",\"content\":\"").append(escapeJson(context)).append("\"},");
 
         for (int i = 0; i < history.size(); i++) {

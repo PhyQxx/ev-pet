@@ -57,8 +57,8 @@
               <span class="tip">启用后将过滤敏感词和违规内容</span>
             </el-form-item>
           </el-form>
-          <el-button type="primary" @click="saveConfig('ai')">保存配置</el-button>
-          <el-button @click="testAI">测试连接</el-button>
+          <el-button type="primary" :loading="saving" @click="saveConfig('ai')">保存配置</el-button>
+          <el-button :loading="testing" @click="testAI">测试连接</el-button>
         </div>
       </el-tab-pane>
       
@@ -233,13 +233,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 
 const activeTab = ref('basic')
 const showVersionDialogFlag = ref(false)
 const showPopupDialogFlag = ref(false)
 const isEditPopup = ref(false)
+const saving = ref(false)
+const testing = ref(false)
 
 const config = ref({
   appName: 'EV Pet',
@@ -264,6 +267,17 @@ const config = ref({
   fullnessDecayPerHour: 5,
   moodDecayPerHour: 2
 })
+
+// AI配置 key 与前端字段的映射
+const aiConfigMap = {
+  ai_api_url: null,
+  ai_api_key: 'aiApiKey',
+  ai_group_id: 'aiGroupId',
+  ai_model: 'aiModel',
+  ai_max_tokens: 'maxTokens',
+  ai_temperature: 'temperature',
+  ai_content_filter: 'contentFilter'
+}
 
 const versionForm = ref({
   version: '',
@@ -293,14 +307,71 @@ const popups = ref([
   { id: 2, title: '周末活动', content: '周末登录送好礼，不要错过哦~', type: 'activity', showTime: 5, position: 'bottom', buttonText: '立即参加', showClose: true, status: 1 }
 ])
 
-const saveConfig = (tab) => {
-  ElMessage.success(`${tab === 'basic' ? '基础配置' : tab === 'ai' ? 'AI配置' : '游戏规则'}已保存`)
+// 从数据库加载AI配置
+const loadAIConfig = async () => {
+  try {
+    const { data } = await axios.get('/api/admin/config')
+    if (data.code === 200 && data.data) {
+      const dbConfig = data.data
+      if (dbConfig.ai_api_key) config.value.aiApiKey = dbConfig.ai_api_key
+      if (dbConfig.ai_group_id) config.value.aiGroupId = dbConfig.ai_group_id
+      if (dbConfig.ai_model) config.value.aiModel = dbConfig.ai_model
+      if (dbConfig.ai_max_tokens) config.value.maxTokens = Number(dbConfig.ai_max_tokens)
+      if (dbConfig.ai_temperature) config.value.temperature = Number(dbConfig.ai_temperature)
+      if (dbConfig.ai_content_filter !== undefined) config.value.contentFilter = dbConfig.ai_content_filter === 'true'
+    }
+  } catch (e) {
+    console.warn('加载配置失败，使用默认值', e)
+  }
 }
 
-const testAI = () => {
-  ElMessage.info('测试连接中...')
-  setTimeout(() => ElMessage.success('AI服务连接正常'), 1000)
+const saveConfig = async (tab) => {
+  if (tab !== 'ai') {
+    ElMessage.success(`${tab === 'basic' ? '基础配置' : '游戏规则'}已保存`)
+    return
+  }
+  saving.value = true
+  try {
+    const payload = {
+      ai_api_key: config.value.aiApiKey,
+      ai_group_id: config.value.aiGroupId,
+      ai_model: config.value.aiModel,
+      ai_max_tokens: String(config.value.maxTokens),
+      ai_temperature: String(config.value.temperature),
+      ai_content_filter: String(config.value.contentFilter)
+    }
+    const { data } = await axios.post('/api/admin/config', payload)
+    if (data.code === 200) {
+      ElMessage.success('AI配置已保存')
+    } else {
+      ElMessage.error(data.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败: ' + (e.response?.data?.message || e.message))
+  } finally {
+    saving.value = false
+  }
 }
+
+const testAI = async () => {
+  testing.value = true
+  try {
+    const { data } = await axios.post('/api/admin/config/test-ai')
+    if (data.code === 200) {
+      ElMessage.success('AI服务连接正常')
+    } else {
+      ElMessage.error(data.message || '连接失败')
+    }
+  } catch (e) {
+    ElMessage.error('连接失败: ' + (e.response?.data?.message || e.message))
+  } finally {
+    testing.value = false
+  }
+}
+
+onMounted(() => {
+  loadAIConfig()
+})
 
 const showVersionDialog = () => {
   versionForm.value = { version: '', type: 'minor', content: '', forceUpdate: false }
