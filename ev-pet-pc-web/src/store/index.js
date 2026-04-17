@@ -1,6 +1,6 @@
-import { createPinia } from 'pinia'
+import { defineStore } from 'pinia'
 
-export const useUserStore = createPinia({
+export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null'),
     petInfo: JSON.parse(localStorage.getItem('petInfo') || 'null'),
@@ -32,7 +32,7 @@ export const useUserStore = createPinia({
   }
 })
 
-export const usePetStore = createPinia({
+export const usePetStore = defineStore('pet', {
   state: () => ({
     petInfo: null,
     messages: []
