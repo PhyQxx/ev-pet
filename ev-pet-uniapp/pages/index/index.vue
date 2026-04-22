@@ -1,107 +1,105 @@
 <template>
   <view class="page">
-    <!-- 顶部状态栏 -->
-    <view class="status-bar" :style="{ paddingTop: statusBarHeight + 'px' }">
+    <!-- Header -->
+    <header class="header">
       <view class="header-left">
-        <view class="pet-avatar">🦊</view>
-        <view class="pet-info">
+        <view class="pet-avatar">{{ petEmoji }}</view>
+        <view class="pet-header-info">
           <text class="pet-name">{{ petInfo?.name || '小可爱' }} 🏅</text>
           <text class="pet-level">Lv.{{ petInfo?.level || 1 }} · {{ stageName }}</text>
         </view>
       </view>
       <view class="header-right">
-        <view class="icon-btn" @click="toAchievement">
-          <text style="font-size:18px;">🔔</text>
-        </view>
-        <view class="gold-chip">
+        <button class="icon-btn" @click="toAchievement">
+          <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </button>
+        <view class="icon-btn coin-btn">
           <text style="font-size:14px;">💰</text>
-          <text class="gold-num">{{ petInfo?.gold || userInfo?.gold || 0 }}</text>
+          <text class="coin-num">{{ petInfo?.gold || userInfo?.gold || 0 }}</text>
         </view>
       </view>
-    </view>
+    </header>
 
-    <!-- 宠物展示区域 -->
-    <view class="pet-stage">
+    <!-- Pet Stage -->
+    <section class="pet-stage">
       <view class="pet-bg"></view>
       <view class="pet-container">
         <view class="pet-sprite" :class="petStatusClass">{{ petEmoji }}</view>
         <view class="pet-mood-text">主人~ 我现在 <text class="mood-highlight">{{ moodText }}</text> 哦~ ✨</view>
       </view>
-    </view>
+    </section>
 
-    <!-- 属性条 -->
-    <view class="status-section">
-      <view class="status-card">
-        <view class="status-row">
-          <view class="status-item">
-            <view class="status-label">
-              <text class="status-icon">⚡</text>
-              <text>体力</text>
-            </view>
-            <view class="status-bar-wrap">
-              <view class="status-bar">
-                <view class="status-bar-fill health" :class="{ low: health < 20 }" :style="{ width: health + '%' }"></view>
-              </view>
-              <text class="status-value">{{ health }}</text>
-            </view>
+    <!-- Status Bars -->
+    <section class="status-section">
+      <view class="status-row">
+        <view class="status-item">
+          <view class="status-label">
+            <text class="status-icon">⚡</text>
+            <text>体力</text>
           </view>
-          <view class="status-item">
-            <view class="status-label">
-              <text class="status-icon">🍎</text>
-              <text>饱食</text>
+          <view class="status-bar-wrap">
+            <view class="status-bar">
+              <view class="status-bar-fill health" :class="{ low: health < 20 }" :style="{ width: health + '%' }"></view>
             </view>
-            <view class="status-bar-wrap">
-              <view class="status-bar">
-                <view class="status-bar-fill fullness" :class="{ low: fullness < 20 }" :style="{ width: fullness + '%' }"></view>
-              </view>
-              <text class="status-value">{{ fullness }}</text>
-            </view>
+            <text class="status-value">{{ health }}</text>
           </view>
-          <view class="status-item">
-            <view class="status-label">
-              <text class="status-icon">❤️</text>
-              <text>心情</text>
+        </view>
+        <view class="status-item">
+          <view class="status-label">
+            <text class="status-icon">🍎</text>
+            <text>饱食</text>
+          </view>
+          <view class="status-bar-wrap">
+            <view class="status-bar">
+              <view class="status-bar-fill fullness" :class="{ low: fullness < 20 }" :style="{ width: fullness + '%' }"></view>
             </view>
-            <view class="status-bar-wrap">
-              <view class="status-bar">
-                <view class="status-bar-fill mood" :class="{ low: petMood < 20 }" :style="{ width: petMood + '%' }"></view>
-              </view>
-              <text class="status-value">{{ petMood }}</text>
+            <text class="status-value">{{ fullness }}</text>
+          </view>
+        </view>
+        <view class="status-item">
+          <view class="status-label">
+            <text class="status-icon">❤️</text>
+            <text>心情</text>
+          </view>
+          <view class="status-bar-wrap">
+            <view class="status-bar">
+              <view class="status-bar-fill mood" :class="{ low: petMood < 20 }" :style="{ width: petMood + '%' }"></view>
             </view>
+            <text class="status-value">{{ petMood }}</text>
           </view>
         </view>
       </view>
-    </view>
+    </section>
 
-    <!-- 快捷操作 -->
-    <view class="action-section">
+    <!-- Quick Actions -->
+    <section class="action-section">
       <view class="section-title">日常照料</view>
       <view class="action-grid">
-        <view class="action-btn" @click="doAction('feed')">
+        <button class="action-btn" @click="doAction('feed')">
           <view class="action-icon" style="background:rgba(255,224,160,0.3);">🍖</view>
           <text class="action-label">喂食</text>
           <text class="action-count">饱食+25</text>
-        </view>
-        <view class="action-btn" @click="doAction('bath')">
+        </button>
+        <button class="action-btn" @click="doAction('bath')">
           <view class="action-icon" style="background:rgba(168,216,234,0.3);">🚿</view>
           <text class="action-label">清洁</text>
           <text class="action-count">体力-5</text>
-        </view>
-        <view class="action-btn" @click="doAction('play')">
+        </button>
+        <button class="action-btn" @click="doAction('play')">
           <view class="action-icon" style="background:rgba(213,170,255,0.3);">🎾</view>
           <text class="action-label">陪玩</text>
           <text class="action-count">心情+30</text>
-        </view>
-        <view class="action-btn" @click="toWork">
+        </button>
+        <button class="action-btn" @click="toWork">
           <view class="action-icon" style="background:rgba(184,241,204,0.3);">💼</view>
           <text class="action-label">打工</text>
           <text class="action-count">金币+50</text>
-        </view>
+        </button>
       </view>
-    </view>
+    </section>
 
-    <!-- 宠物好友 -->
-    <view class="friends-section">
+    <!-- Friends -->
+    <section class="friends-section">
       <view class="section-title">宠物好友</view>
       <scroll-view class="friends-scroll" scroll-x>
         <view class="friend-chip" v-for="f in mockFriends" :key="f.name">
@@ -109,31 +107,45 @@
           <text class="friend-name">{{ f.name }}</text>
         </view>
       </scroll-view>
-    </view>
+    </section>
 
-    <!-- 今日任务 -->
-    <view class="quest-section">
+    <!-- Daily Quests -->
+    <section class="quest-section">
       <view class="section-title">今日任务</view>
       <view class="quest-card">
         <view class="quest-header">
           <view class="quest-title">🌟 每日活跃</view>
-          <view class="quest-progress">3/5 完成</view>
+          <view class="quest-progress">{{ completedCount }}/{{ quests.length }} 完成</view>
         </view>
         <view class="quest-list">
           <view class="quest-item" v-for="q in quests" :key="q.text">
             <text class="quest-icon">{{ q.icon }}</text>
             <text class="quest-text">{{ q.text }}</text>
             <text class="quest-reward">💰+{{ q.reward }}</text>
-            <view class="quest-check" :style="q.done ? 'background:#B8F1CC;' : 'background:#F0F0F0;'">
+            <view class="quest-check" :style="q.done ? 'background:#B8F1CC;' : 'background:rgba(0,0,0,0.1);'">
               <text v-if="q.done" style="color:white;font-size:10px;">✓</text>
               <text v-else style="font-size:10px;color:#888;">0</text>
             </view>
           </view>
         </view>
       </view>
-    </view>
+    </section>
 
-    <!-- 养成操作遮罩 -->
+    <!-- AI Chat CTA -->
+    <section class="chat-cta-section">
+      <view class="chat-cta-card" @click="toChat">
+        <view class="chat-cta-left">
+          <view class="chat-cta-emoji">💬</view>
+          <view class="chat-cta-info">
+            <text class="chat-cta-title">和 AI 小福聊天</text>
+            <text class="chat-cta-desc">聊聊心事、问问建议~</text>
+          </view>
+        </view>
+        <view class="chat-cta-arrow">→</view>
+      </view>
+    </section>
+
+    <!-- Action Overlay -->
     <view class="action-overlay" :class="{ show: actionVisible }">
       <view class="action-modal">
         <view class="action-pet-big">{{ petEmoji }}</view>
@@ -154,7 +166,6 @@ import { pet as petApi, getUserInfo } from '../../utils/api.js'
 export default {
   data() {
     return {
-      statusBarHeight: 0,
       userInfo: null,
       petInfo: null,
       timer: null,
@@ -181,6 +192,9 @@ export default {
     }
   },
   computed: {
+    completedCount() {
+      return this.quests.filter(q => q.done).length
+    },
     petEmoji() {
       const stage = this.petInfo?.stage || 1
       const status = this.petInfo?.status || 'happy'
@@ -215,8 +229,6 @@ export default {
     }
   },
   onLoad() {
-    const info = uni.getSystemInfoSync()
-    this.statusBarHeight = info.statusBarHeight || 0
     this.userInfo = getUserInfo()
   },
   onShow() {
@@ -237,9 +249,9 @@ export default {
     },
     doAction(type) {
       const configs = {
-        feed: { title: '喂食中...', desc: '小福正在享用美食~ 🍖', complete: '✨ 完成！饱食+25' },
-        bath: { title: '洗澡中...', desc: '小福正在洗香香~ 🚿', complete: '✨ 完成！心情+10' },
-        play: { title: '玩耍中...', desc: '小福玩得好开心~ 🎾', complete: '✨ 完成！心情+30' }
+        feed: { title: '喂食中...', desc: '小福正在享用美食~ 🍖', complete: '✨ 完成！饱食+25', api: 'feed' },
+        bath: { title: '洗澡中...', desc: '小福正在洗香香~ 🚿', complete: '✨ 完成！心情+10', api: 'bath' },
+        play: { title: '玩耍中...', desc: '小福玩得好开心~ 🎾', complete: '✨ 完成！心情+30', api: 'play' }
       }
       const cfg = configs[type]
       if (!cfg) return
@@ -251,8 +263,7 @@ export default {
       this.actionDone = false
       this.actionVisible = true
 
-      const apiMap = { feed: 'feed', bath: 'bath', play: 'play' }
-      petApi[apiMap[type]]().then(data => {
+      petApi[cfg.api]().then(data => {
         this.petInfo = data
       }).catch(() => {})
 
@@ -274,6 +285,9 @@ export default {
     toWork() {
       uni.navigateTo({ url: '/pages/work/work' })
     },
+    toChat() {
+      uni.switchTab({ url: '/pages/chat/chat' })
+    },
     toAchievement() {
       uni.navigateTo({ url: '/pages/achievement/achievement' })
     }
@@ -282,69 +296,112 @@ export default {
 </script>
 
 <style scoped>
+/* CSS Variables */
+page {
+  --primary: #FFB3C6;
+  --primary-dark: #FF8FAB;
+  --primary-light: #FFD5E5;
+  --secondary: #A8D8EA;
+  --secondary-dark: #7EC8D8;
+  --secondary-light: #D5E8F0;
+  --yellow: #FFE5A0;
+  --yellow-dark: #FFD166;
+  --yellow-light: #FFF4C2;
+  --purple: #D5AAFF;
+  --purple-light: #EDE4FF;
+  --green: #B8F1CC;
+  --coral: #FFACA8;
+  --red: #FF6B6B;
+  --bg: #FFF8FA;
+  --bg-page: #EEE8F5;
+  --text: #4A3F55;
+  --text-secondary: #7A6B8A;
+  --text-muted: #A898B8;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-full: 999px;
+  --shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  --shadow-lg: 0 8px 32px rgba(80, 60, 100, 0.14);
+}
+
 .page {
   min-height: 100vh;
-  background: #F5EEF8;
+  background: #EEE8F5;
   padding-bottom: 140rpx;
 }
 
 /* Header */
-.status-bar {
+.header {
+  padding: 10px 16px 6px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16rpx 32rpx 12rpx;
   position: sticky;
   top: 0;
   z-index: 10;
-  background: linear-gradient(to bottom, #F5EEF8, transparent);
+  background: linear-gradient(to bottom, #EEE8F5, transparent);
 }
-.header-left { display: flex; align-items: center; gap: 16rpx; }
+.header-left { display: flex; align-items: center; gap: 10px; }
 .pet-avatar {
-  width: 72rpx; height: 72rpx;
+  width: 36px; height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
-  border: 3rpx solid #FFFFFF;
+  border: 2px solid white;
   display: flex; align-items: center; justify-content: center;
-  font-size: 36rpx;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+  font-size: 20px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
-.pet-info { display: flex; flex-direction: column; }
-.pet-name { font-size: 30rpx; font-weight: 700; color: #4A3F55; }
-.pet-level { font-size: 22rpx; color: #D5AAFF; font-weight: 600; margin-top: 2rpx; }
-.header-right { display: flex; gap: 16rpx; align-items: center; }
+.pet-header-info { display: flex; flex-direction: column; }
+.pet-name {
+  font-size: 17px;
+  font-weight: 700;
+  color: #4A3F55;
+  letter-spacing: 0.5px;
+}
+.pet-level {
+  font-size: 11px;
+  color: #D5AAFF;
+  font-weight: 600;
+}
+.header-right { display: flex; gap: 10px; align-items: center; }
 .icon-btn {
-  width: 72rpx; height: 72rpx;
-  border-radius: 24rpx;
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(16rpx);
+  width: 36px; height: 36px;
+  border-radius: 12px;
   border: none;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px);
+  color: #7A6B8A;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+  cursor: pointer;
+  transition: all 150ms;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  padding: 0;
 }
-.gold-chip {
-  display: flex; align-items: center; gap: 6rpx;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16rpx);
-  padding: 14rpx 20rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+.icon-btn:active { transform: scale(0.92); background: #FFD5E5; }
+.icon-btn svg { width: 18px; height: 18px; }
+.coin-btn {
+  width: auto;
+  padding: 0 12px;
+  gap: 4px;
+  font-size: 12px;
+  flex-direction: row;
 }
-.gold-num { font-size: 26rpx; font-weight: 700; color: #4A3F55; }
+.coin-num { font-size: 12px; font-weight: 700; color: #4A3F55; margin-left: 2px; }
 
 /* Pet Stage */
 .pet-stage {
   position: relative;
-  padding: 24rpx 32rpx 20rpx;
+  padding: 20px 16px 16px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 .pet-bg {
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 360rpx;
-  background: linear-gradient(180deg, #FFE5F0 0%, #F5EEF8 100%);
-  border-radius: 0 0 60rpx 60rpx;
+  height: 240px;
+  background: linear-gradient(180deg, #FFE5F0 0%, #EEE8F5 100%);
+  border-radius: 0 0 40px 40px;
   z-index: 0;
 }
 .pet-container {
@@ -355,133 +412,232 @@ export default {
   align-items: center;
 }
 .pet-sprite {
-  font-size: 180rpx;
+  font-size: 120px;
   line-height: 1;
   animation: petBreathe 2s ease-in-out infinite;
-  filter: drop-shadow(0 12rpx 24rpx rgba(255,179,198,0.35));
+  filter: drop-shadow(0 8px 16px rgba(255,179,198,0.35));
   user-select: none;
-  margin-bottom: 12rpx;
+  margin-bottom: 8px;
 }
 @keyframes petBreathe {
   0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-10rpx) scale(1.02); }
+  50% { transform: translateY(-6px) scale(1.02); }
 }
 .pet-mood-text {
-  font-size: 26rpx;
+  font-size: 13px;
   color: #7A6B8A;
   background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16rpx);
-  padding: 8rpx 28rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+  backdrop-filter: blur(8px);
+  padding: 4px 14px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  margin-bottom: 12px;
 }
 .mood-highlight { font-weight: 600; color: #FF8FAB; }
 
 /* Status Bars */
-.status-section { padding: 0 32rpx; }
-.status-card {
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(24rpx);
-  border-radius: 32rpx;
-  padding: 24rpx;
-  box-shadow: 0 4rpx 24rpx rgba(80,60,100,0.08);
+.status-section {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-.status-row { display: flex; flex-direction: column; gap: 16rpx; }
-.status-item { display: flex; align-items: center; gap: 16rpx; }
-.status-label { display: flex; align-items: center; gap: 6rpx; width: 96rpx; }
-.status-icon { font-size: 26rpx; }
-.status-label text { font-size: 22rpx; color: #A898B8; font-weight: 600; }
-.status-bar-wrap { display: flex; align-items: center; flex: 1; gap: 12rpx; }
+.status-row {
+  display: flex;
+  gap: 10px;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+}
+.status-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.status-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #A898B8;
+  font-weight: 600;
+}
+.status-icon { font-size: 13px; }
+.status-bar-wrap { display: flex; align-items: center; gap: 6px; }
 .status-bar {
-  flex: 1; height: 16rpx;
-  border-radius: 8rpx;
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
   background: rgba(0,0,0,0.07);
   overflow: hidden;
 }
 .status-bar-fill {
   height: 100%;
-  border-radius: 8rpx;
+  border-radius: 4px;
   transition: width 600ms ease;
 }
 .status-bar-fill.health { background: linear-gradient(90deg, #A8D8EA, #7EC8D8); }
 .status-bar-fill.fullness { background: linear-gradient(90deg, #FFE5A0, #FFD166); }
-.status-bar-fill.mood { background: linear-gradient(90deg, #FFB3C6, #FF8FAB); }
-.status-bar-fill.low { background: linear-gradient(90deg, #FFACA8, #FF6B6B) !important; animation: pulseBar 1s ease-in-out infinite; }
-@keyframes pulseBar { 0%,100%{opacity:1;} 50%{opacity:0.65;} }
-.status-value { font-size: 24rpx; font-weight: 700; color: #4A3F55; min-width: 48rpx; text-align: right; }
+.status-bar-fill.mood { background: linear-gradient(90deg, #FFD5E5, #FFB3C6); }
+.status-bar-fill.low { background: linear-gradient(90deg, #FFACA8, #FF6B6B); animation: pulseBar 1s ease-in-out infinite; }
+@keyframes pulseBar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+.status-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4A3F55;
+  min-width: 28px;
+  text-align: right;
+}
 
 /* Quick Actions */
-.action-section { padding: 32rpx 32rpx 16rpx; }
-.section-title { font-size: 30rpx; font-weight: 700; color: #4A3F55; margin-bottom: 20rpx; }
-.action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; }
+.action-section {
+  padding: 16px 16px 8px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4A3F55;
+  margin-bottom: 12px;
+}
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
 .action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8rpx;
-  padding: 20rpx 4rpx;
-  border-radius: 24rpx;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(16rpx);
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+  gap: 6px;
+  padding: 14px 4px;
+  border-radius: 20px;
   border: none;
+  background: rgba(255,255,255,0.9);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  cursor: pointer;
+  transition: all 200ms;
+  font-family: inherit;
 }
+.action-btn:active { transform: scale(0.93); box-shadow: 0 8px 32px rgba(80, 60, 100, 0.14); }
 .action-icon {
-  width: 88rpx; height: 88rpx;
+  width: 48px; height: 48px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 44rpx;
-  margin-bottom: 4rpx;
+  font-size: 24px;
+  margin-bottom: 2px;
 }
-.action-label { font-size: 24rpx; font-weight: 600; color: #4A3F55; }
-.action-count { font-size: 20rpx; color: #A898B8; background: #F5EEF8; padding: 4rpx 10rpx; border-radius: 999rpx; }
+.action-label { font-size: 12px; font-weight: 600; color: #7A6B8A; }
+.action-count {
+  font-size: 10px;
+  color: #A898B8;
+  background: #EEE8F5;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
 
 /* Friends */
-.friends-section { padding: 24rpx 32rpx 16rpx; }
-.friends-scroll { display: flex; gap: 24rpx; overflow-x: auto; white-space: nowrap; }
+.friends-section {
+  padding: 16px 16px 8px;
+}
+.friends-scroll {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
 .friends-scroll::-webkit-scrollbar { display: none; }
-.friend-chip { display: flex; flex-direction: column; align-items: center; gap: 8rpx; flex-shrink: 0; }
+.friend-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
 .friend-avatar {
-  width: 96rpx; height: 96rpx;
+  width: 52px; height: 52px;
   border-radius: 50%;
   background: linear-gradient(135deg, #EDE4FF, #FFD5E5);
-  border: 3rpx solid #FFFFFF;
+  border: 2px solid white;
   display: flex; align-items: center; justify-content: center;
-  font-size: 52rpx;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+  font-size: 28px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
-.friend-name { font-size: 20rpx; color: #7A6B8A; }
+.friend-name { font-size: 10px; color: #7A6B8A; }
 
-/* Quests */
-.quest-section { padding: 24rpx 32rpx 16rpx; }
+/* Daily Quests */
+.quest-section {
+  padding: 16px 16px 8px;
+}
 .quest-card {
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
-  border-radius: 28rpx;
-  padding: 24rpx;
-  box-shadow: 0 4rpx 24rpx rgba(80,60,100,0.08);
+  border-radius: 20px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
-.quest-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16rpx; }
-.quest-title { font-size: 28rpx; font-weight: 700; color: #4A3F55; }
-.quest-progress { font-size: 22rpx; color: #FF8FAB; font-weight: 600; }
-.quest-list { display: flex; flex-direction: column; gap: 12rpx; }
+.quest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.quest-title { font-size: 14px; font-weight: 700; color: #4A3F55; }
+.quest-progress { font-size: 11px; color: #FF8FAB; font-weight: 600; }
+.quest-list { display: flex; flex-direction: column; gap: 8px; }
 .quest-item {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 10px;
   background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(16rpx);
-  border-radius: 20rpx;
-  padding: 16rpx 20rpx;
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 10px 12px;
 }
-.quest-icon { font-size: 32rpx; }
-.quest-text { flex: 1; font-size: 24rpx; color: #7A6B8A; }
-.quest-reward { font-size: 22rpx; color: #C49A1A; font-weight: 700; }
+.quest-icon { font-size: 18px; }
+.quest-text { flex: 1; font-size: 12px; color: #7A6B8A; }
+.quest-reward { font-size: 11px; color: #C49A1A; font-weight: 700; display: flex; align-items: center; gap: 2px; }
 .quest-check {
-  width: 36rpx; height: 36rpx;
+  width: 20px; height: 20px;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
+
+/* Chat CTA */
+.chat-cta-section {
+  padding: 16px 16px 8px;
+}
+.chat-cta-card {
+  background: linear-gradient(135deg, #EDE4FF, #FFD5E5);
+  border-radius: 20px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.chat-cta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chat-cta-emoji {
+  font-size: 32px;
+}
+.chat-cta-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.chat-cta-title { font-size: 14px; font-weight: 700; color: #4A3F55; }
+.chat-cta-desc { font-size: 12px; color: #7A6B8A; }
+.chat-cta-arrow { font-size: 20px; color: #D5AAFF; }
 
 /* Action Overlay */
 .action-overlay {
@@ -493,17 +649,33 @@ export default {
 .action-overlay.show { opacity: 1; pointer-events: all; }
 .action-modal {
   background: #FFFFFF;
-  border-radius: 32rpx;
-  padding: 48rpx 40rpx;
-  width: 480rpx;
+  border-radius: 20px;
+  padding: 24px;
+  width: 280px;
   text-align: center;
-  box-shadow: 0 8rpx 40rpx rgba(80,60,100,0.2);
+  box-shadow: 0 8px 40px rgba(80, 60, 100, 0.2);
+  animation: modalIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.action-pet-big { font-size: 160rpx; margin-bottom: 16rpx; }
-.action-title { font-size: 32rpx; font-weight: 700; color: #4A3F55; margin-bottom: 8rpx; }
-.action-desc { font-size: 26rpx; color: #7A6B8A; margin-bottom: 24rpx; }
-.action-progress { height: 12rpx; border-radius: 6rpx; background: rgba(0,0,0,0.07); margin-bottom: 16rpx; overflow: hidden; }
-.action-progress-fill { height: 100%; border-radius: 6rpx; background: linear-gradient(90deg, #FFB3C6, #D5AAFF); transition: width 200ms ease; }
-.action-complete { font-size: 26rpx; font-weight: 700; color: #5DA06B; display: none; }
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.action-pet-big { font-size: 80px; margin-bottom: 12px; }
+.action-title { font-size: 16px; font-weight: 700; color: #4A3F55; margin-bottom: 4px; }
+.action-desc { font-size: 13px; color: #7A6B8A; margin-bottom: 16px; }
+.action-progress {
+  height: 8px; border-radius: 4px;
+  background: rgba(0,0,0,0.07);
+  margin-bottom: 12px; overflow: hidden;
+}
+.action-progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #FFB3C6, #D5AAFF);
+  transition: width 200ms ease;
+}
+.action-complete {
+  font-size: 13px; font-weight: 700; color: #5DA06B;
+  display: none;
+}
 .action-complete.show { display: block; }
 </style>

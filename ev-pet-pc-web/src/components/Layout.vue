@@ -1,120 +1,111 @@
 <template>
-  <el-container class="layout-container">
-    <!-- 侧边栏 -->
-    <el-aside width="240px" class="sidebar">
-      <div class="logo">
-        <span class="logo-icon">🐾</span>
-        <span class="logo-text">EV Pet</span>
+  <div class="ev-layout">
+    <!-- ── 左侧边栏 ── -->
+    <aside class="ev-sidebar">
+      <!-- Logo -->
+      <div class="ev-logo">
+        <div class="ev-logo-icon">🦊</div>
+        <span class="ev-logo-text">EV Pet</span>
       </div>
-      
-      <el-menu
-        :default-active="currentRoute"
-        class="sidebar-menu"
-        router
-        :collapse="isCollapse"
-      >
-        <el-menu-item index="/">
-          <el-icon><HomeFilled /></el-icon>
-          <template #title>仪表盘</template>
-        </el-menu-item>
-        <el-menu-item index="/chat">
-          <el-icon><ChatDotRound /></el-icon>
-          <template #title>AI对话</template>
-        </el-menu-item>
-        <el-menu-item index="/growth">
-          <el-icon><TrendCharts /></el-icon>
-          <template #title>养成中心</template>
-        </el-menu-item>
-        <el-menu-item index="/studio">
-          <el-icon><Brush /></el-icon>
-          <template #title>装扮工作室</template>
-        </el-menu-item>
-        <el-menu-item index="/shop">
-          <el-icon><Shop /></el-icon>
-          <template #title>商店</template>
-        </el-menu-item>
-        <el-menu-item index="/work">
-          <el-icon><Briefcase /></el-icon>
-          <template #title>打工系统</template>
-        </el-menu-item>
-        <el-menu-item index="/social">
-          <el-icon><User /></el-icon>
-          <template #title>社交中心</template>
-        </el-menu-item>
-        <el-menu-item index="/achievement">
-          <el-icon><Trophy /></el-icon>
-          <template #title>成就系统</template>
-        </el-menu-item>
-        <el-menu-item index="/settings">
-          <el-icon><Setting /></el-icon>
-          <template #title>设置</template>
-        </el-menu-item>
-      </el-menu>
-      
-      <div class="sidebar-footer">
-        <div class="pet-mini" @click="goHome">
-          <span class="pet-mini-emoji">{{ petEmoji }}</span>
-          <div class="pet-mini-info">
-            <span class="pet-mini-name">{{ petStore.petInfo?.name || '小可爱' }}</span>
-            <el-progress :percentage="petStore.petInfo?.health || 0" :stroke-width="4" :show-text="false" />
+
+      <!-- 导航 -->
+      <nav class="ev-nav">
+        <div class="ev-nav-section">
+          <span class="ev-nav-label">主菜单</span>
+          <button
+            v-for="item in mainNav"
+            :key="item.path"
+            class="ev-nav-item"
+            :class="{ active: currentRoute === item.path }"
+            @click="navigate(item.path)"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span class="ev-nav-text">{{ item.label }}</span>
+          </button>
+        </div>
+
+        <div class="ev-nav-section">
+          <span class="ev-nav-label">我的</span>
+          <button
+            v-for="item in myNav"
+            :key="item.path"
+            class="ev-nav-item"
+            :class="{ active: currentRoute === item.path }"
+            @click="navigate(item.path)"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span class="ev-nav-text">{{ item.label }}</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- 侧边栏底部用户信息 -->
+      <div class="ev-sidebar-footer">
+        <div class="ev-user-card">
+          <div class="ev-user-avatar">{{ userAvatar }}</div>
+          <div class="ev-user-info">
+            <span class="ev-user-name">{{ userStore.userInfo?.nickname || '玩家' }}</span>
+            <span class="ev-user-role">{{ userStore.userInfo?.title || '冒险者' }} Lv.{{ userStore.userInfo?.level || 1 }}</span>
           </div>
         </div>
       </div>
-    </el-aside>
-    
-    <!-- 主内容区 -->
-    <el-container>
+    </aside>
+
+    <!-- ── 主内容区 ── -->
+    <div class="ev-main">
       <!-- 顶部栏 -->
-      <el-header class="header">
-        <div class="header-left">
-          <h2 class="page-title">{{ pageTitle }}</h2>
+      <header class="ev-header">
+        <div class="ev-header-left">
+          <span class="ev-page-title">{{ pageTitle }}</span>
+          <span class="ev-page-date">{{ today }}</span>
         </div>
-        <div class="header-right">
-          <div class="user-info">
-            <span class="gold">
-              <span class="gold-icon">🪙</span>
-              <span class="gold-num">{{ userStore.userInfo?.gold || 0 }}</span>
-            </span>
-            <el-dropdown @command="handleCommand">
-              <span class="user-dropdown">
-                <el-avatar :size="36" class="user-avatar">
-                  {{ userStore.userInfo?.nickname?.charAt(0) || '我' }}
-                </el-avatar>
-                <span class="user-name">{{ userStore.userInfo?.nickname }}</span>
-                <el-icon><ArrowDown /></el-icon>
-              </span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="profile">个人中心</el-dropdown-item>
-                  <el-dropdown-item command="settings">设置</el-dropdown-item>
-                  <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
+        <div class="ev-header-right">
+          <button class="ev-header-btn">
+            <span>🔔</span>
+            <span class="ev-header-btn-text">提醒</span>
+          </button>
+          <button class="ev-header-btn ev-header-btn-primary" @click="newChat">
+            <span>✨</span>
+            <span class="ev-header-btn-text">新建对话</span>
+          </button>
+          <div class="ev-header-gold">
+            <span>💰</span>
+            <span class="ev-gold-num">{{ userStore.userInfo?.gold || 0 }}</span>
+            <span class="ev-gold-label">金币余额</span>
           </div>
         </div>
-      </el-header>
-      
-      <!-- 内容区 -->
-      <el-main class="main-content">
+      </header>
+
+      <!-- 页面内容 -->
+      <main class="ev-content">
         <router-view />
-      </el-main>
-    </el-container>
-  </el-container>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useUserStore, usePetStore } from '../store'
-import { ElMessageBox } from 'element-plus'
+import { useUserStore } from '../store'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
-const petStore = usePetStore()
 
-const isCollapse = false
+const mainNav = [
+  { icon: '📊', label: '仪表盘', path: '/' },
+  { icon: '💬', label: 'AI对话', path: '/chat' },
+  { icon: '🌱', label: '养成中心', path: '/growth' },
+  { icon: '🎨', label: '装扮工作室', path: '/studio' },
+  { icon: '🛒', label: '商店', path: '/shop' },
+]
+
+const myNav = [
+  { icon: '🏆', label: '成就', path: '/achievement' },
+  { icon: '⚙️', label: '设置', path: '/settings' },
+  { icon: '👥', label: '运营后台', path: '/admin', adminOnly: true },
+]
 
 const currentRoute = computed(() => route.path)
 
@@ -128,179 +119,304 @@ const pageTitle = computed(() => {
     '/work': '打工系统',
     '/social': '社交中心',
     '/achievement': '成就系统',
-    '/settings': '设置'
+    '/settings': '设置',
   }
   return titles[route.path] || 'EV Pet'
 })
 
-const petEmoji = computed(() => {
-  const stage = petStore.petInfo?.stage || 1
-  return stage === 1 ? '🐣' : stage === 2 ? '🐥' : '🐦'
+const today = computed(() => {
+  const now = new Date()
+  return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`
 })
 
-const goHome = () => router.push('/')
+const userAvatar = computed(() => {
+  return userStore.userInfo?.nickname?.charAt(0) || '我'
+})
 
-const handleCommand = (command) => {
-  if (command === 'logout') {
-    ElMessageBox.confirm('确定要退出登录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      userStore.logout()
-      router.push('/login')
-    })
-  } else if (command === 'profile') {
-    router.push('/settings')
-  } else if (command === 'settings') {
-    router.push('/settings')
+const navigate = (path) => {
+  if (path === '/admin') {
+    window.open('http://localhost:5177', '_blank')
+    return
   }
+  router.push(path)
+}
+
+const newChat = () => {
+  router.push('/chat')
 }
 </script>
 
-<style scoped>
-.layout-container {
+<style lang="scss" scoped>
+@import '@/styles/ev-pet.scss';
+
+.ev-layout {
+  display: flex;
+  min-height: 100vh;
+  background: $ev-bg-page;
+}
+
+// ── 侧边栏 ──────────────────────────────────────────────────
+.ev-sidebar {
+  width: $ev-sidebar-width;
+  min-width: $ev-sidebar-width;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-right: 1px solid $ev-border;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+// Logo
+.ev-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 24px 20px 16px;
+}
+
+.ev-logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: $ev-gradient-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba($ev-primary, 0.4);
+}
+
+.ev-logo-text {
+  font-size: 16px;
+  font-weight: 700;
+  color: $ev-text;
+}
+
+// 导航
+.ev-nav {
+  flex: 1;
+  padding: 8px 12px;
+}
+
+.ev-nav-section {
+  margin-bottom: 20px;
+}
+
+.ev-nav-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: $ev-text-muted;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 8px;
+  margin-bottom: 4px;
+}
+
+.ev-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: $ev-radius-sm;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: inherit;
+  font-size: $ev-font-size-base;
+  color: $ev-text;
+  text-align: left;
+  margin-bottom: 2px;
+
+  &:hover {
+    background: $ev-primary-light;
+    color: $ev-primary-dark;
+  }
+
+  &.active {
+    background: $ev-primary-light;
+    color: $ev-primary-dark;
+    font-weight: 600;
+  }
+}
+
+.ev-nav-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ev-nav-text {
+  font-size: $ev-font-size-base;
+}
+
+// 侧边栏底部
+.ev-sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid $ev-border;
+}
+
+.ev-user-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: $ev-bg;
+  border-radius: $ev-radius-sm;
+}
+
+.ev-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $ev-gradient-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.ev-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+}
+
+.ev-user-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: $ev-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ev-user-role {
+  font-size: 11px;
+  color: $ev-text-muted;
+}
+
+// ── 主内容区 ───────────────────────────────────────────────
+.ev-main {
+  margin-left: $ev-sidebar-width;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   height: 100vh;
 }
 
-.sidebar {
-  background: linear-gradient(180deg, #FFFFFF 0%, #FFF4F8 100%);
-  border-right: 1px solid rgba(213, 170, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-}
-
-.logo {
-  padding: 24px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo-icon {
-  font-size: 36px;
-}
-
-.logo-text {
-  font-size: 24px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #FFB3C6 0%, #D5AAFF 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.sidebar-menu {
-  flex: 1;
-  border-right: none;
-  background: transparent;
-}
-
-.sidebar-menu:not(.el-menu--collapse) {
-  width: 240px;
-}
-
-:deep(.el-menu-item) {
-  border-radius: 12px;
-  margin: 4px 12px;
-  height: 48px;
-}
-
-:deep(.el-menu-item.is-active) {
-  background: linear-gradient(135deg, rgba(255, 179, 198, 0.3) 0%, rgba(213, 170, 255, 0.3) 100%);
-  color: var(--primary-dark);
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(213, 170, 255, 0.2);
-}
-
-.pet-mini {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.pet-mini:hover {
-  background: rgba(255, 179, 198, 0.2);
-}
-
-.pet-mini-emoji {
-  font-size: 40px;
-}
-
-.pet-mini-info {
-  flex: 1;
-}
-
-.pet-mini-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.header {
-  background: var(--bg-card);
-  border-bottom: 1px solid rgba(213, 170, 255, 0.2);
+// 顶部栏
+.ev-header {
+  height: 64px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid $ev-border;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
+.ev-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
-.header-right {
+.ev-page-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: $ev-text;
+}
+
+.ev-page-date {
+  font-size: 11px;
+  color: $ev-text-muted;
+}
+
+.ev-header-right {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
 }
 
-.gold {
+.ev-header-btn {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #FFF4C2 0%, #FFE5A0 100%);
   padding: 8px 16px;
-  border-radius: 20px;
+  border-radius: $ev-radius-sm;
+  border: 1px solid $ev-border;
+  background: white;
+  color: $ev-text-sec;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: inherit;
+  box-shadow: $ev-shadow;
+
+  &:hover {
+    background: $ev-primary-light;
+    color: $ev-primary-dark;
+    border-color: $ev-primary-light;
+  }
+
+  &.ev-header-btn-primary {
+    background: $ev-gradient-primary;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba($ev-primary, 0.35);
+
+    &:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+  }
 }
 
-.gold-icon {
-  font-size: 20px;
-}
-
-.gold-num {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.user-dropdown {
+.ev-header-gold {
   display: flex;
   align-items: center;
-  gap: 8px;
-  cursor: pointer;
+  gap: 6px;
+  padding: 8px 16px;
+  background: $ev-bg;
+  border-radius: $ev-radius-full;
+  border: 1px solid $ev-border;
+  font-size: 14px;
 }
 
-.user-avatar {
-  background: linear-gradient(135deg, #FFB3C6 0%, #D5AAFF 100%);
+.ev-gold-num {
+  font-weight: 700;
+  color: $ev-text;
 }
 
-.user-name {
-  font-weight: 500;
+.ev-gold-label {
+  font-size: 11px;
+  color: $ev-text-muted;
 }
 
-.main-content {
-  background: var(--bg-page);
-  padding: 24px;
-  overflow-y: auto;
+// 页面内容
+.ev-content {
+  flex: 1;
+  overflow: hidden;
+  padding: 28px 32px;
 }
 </style>

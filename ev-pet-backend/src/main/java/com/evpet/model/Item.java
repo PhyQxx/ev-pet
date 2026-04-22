@@ -20,5 +20,6 @@ public class Item {
     private String icon;             // 图标URL
     private String effect;           // 效果 JSON
     private Boolean isFree;         // 是否免费
+    private Integer status;         // 1=上架, 0=下架
     private LocalDateTime createTime;
 }

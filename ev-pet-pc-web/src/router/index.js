@@ -42,6 +42,16 @@ const routes = [
         component: () => import('../views/achievement/Achievement.vue')
       },
       {
+        path: 'pets',
+        name: 'Pets',
+        component: () => import('../views/pets/Pets.vue')
+      },
+      {
+        path: 'activities',
+        name: 'Activities',
+        component: () => import('../views/activities/Activities.vue')
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('../views/settings/Settings.vue')

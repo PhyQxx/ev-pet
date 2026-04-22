@@ -1,236 +1,249 @@
 <template>
-  <div class="content-page">
-    <div class="toolbar">
-      <el-radio-group v-model="type" @change="loadContent">
-        <el-radio-button label="chat">聊天记录</el-radio-button>
-        <el-radio-button label="post">动态</el-radio-button>
-        <el-radio-button label="comment">评论</el-radio-button>
-      </el-radio-group>
-      <el-select v-model="status" placeholder="审核状态" @change="loadContent">
-        <el-option label="全部" value="" />
-        <el-option label="待审核" value="pending" />
-        <el-option label="通过" value="approved" />
-        <el-option label="违规" value="rejected" />
-      </el-select>
-    </div>
-    
-    <el-table :data="contentList" stripe class="content-table">
-      <el-table-column label="类型" width="80">
-        <template #default="{ row }">
-          <el-tag size="small" :type="getTypeTag(row.type)">{{ getTypeName(row.type) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="内容" min-width="300">
-        <template #default="{ row }">
-          <div class="content-cell">
-            <p class="content-text">{{ row.content }}</p>
-            <span class="content-meta">{{ row.userName }} · {{ row.time }}</span>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="宠物状态" width="100">
-        <template #default="{ row }">
-          <span class="pet-status" :class="row.petStatus">{{ row.petStatus }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag size="small" :type="getStatusTag(row.status)">{{ getStatusName(row.status) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="reportCount" label="举报次数" width="100" />
-      <el-table-column prop="createTime" label="发布时间" width="160" />
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button v-if="row.status === 'pending'" size="small" type="success" @click="approve(row)">通过</el-button>
-          <el-button v-if="row.status === 'pending'" size="small" type="danger" @click="reject(row)">违规</el-button>
-          <el-button size="small" @click="viewDetail(row)">详情</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
-    <el-pagination
-      class="pagination"
-      background
-      layout="prev, pager, next, total"
-      :total="total"
-      :page-size="pageSize"
-      v-model:current-page="currentPage"
-      @current-change="loadContent"
-    />
-    
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="showDetail" title="内容详情" width="600px">
-      <div class="detail-content" v-if="selected">
-        <div class="detail-header">
-          <el-tag>{{ getTypeName(selected.type) }}</el-tag>
-          <el-tag :type="getStatusTag(selected.status)">{{ getStatusName(selected.status) }}</el-tag>
+  <div class="admin-page">
+    <div class="page-title">📝 内容审核</div>
+    <div class="page-sub">监控用户生成内容（UGC）· 宠物的名字、动态、聊天内容</div>
+
+    <!-- Tab Filters -->
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <div
+          v-for="tab in tabs"
+          :key="tab.value"
+          :class="['tab-item', { active: activeTab === tab.value }]"
+          @click="activeTab = tab.value"
+        >
+          {{ tab.icon }} {{ tab.label }}
         </div>
-        <div class="detail-body">
-          <p class="detail-text">{{ selected.content }}</p>
-          <div class="detail-meta">
-            <span>发布用户：{{ selected.userName }}</span>
-            <span>发布时间：{{ selected.createTime }}</span>
-          </div>
-        </div>
-        <div class="detail-reason" v-if="selected.rejectReason">
-          <h4>违规原因</h4>
-          <p>{{ selected.rejectReason }}</p>
-        </div>
+        <button class="btn" style="margin-left:auto;">📤 导出记录</button>
       </div>
-      <template #footer v-if="selected && selected.status === 'pending'">
-        <el-button @click="showDetail = false">关闭</el-button>
-        <el-button type="success" @click="approve(selected); showDetail = false">通过</el-button>
-        <el-button type="danger" @click="showRejectDialog">标记违规</el-button>
-      </template>
-    </el-dialog>
-    
-    <!-- 违规原因弹窗 -->
-    <el-dialog v-model="showReject" title="标记违规" width="400px">
-      <el-form>
-        <el-form-item label="违规原因">
-          <el-input v-model="rejectReason" type="textarea" :rows="3" placeholder="请输入违规原因" />
-        </el-form-item>
-      </el-form>
+    </div>
+
+    <!-- Content Review Cards -->
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Pending Items -->
+        <template v-if="activeTab === 'pending'">
+          <div v-for="item in pendingList" :key="item.id" class="review-card">
+            <div class="review-icon">{{ item.icon }}</div>
+            <div class="review-body">
+              <div class="review-title">{{ item.title }}</div>
+              <div class="review-content">用户「<b>{{ item.userName }}</b>」的{{ item.target }}为「<b>{{ item.violation }}</b>」，{{ item.reason }}</div>
+              <div class="review-meta">ID: {{ item.userId }} · {{ item.time }}</div>
+            </div>
+            <div class="review-actions">
+              <button class="btn btn-sm" style="background:#F0FFF5;color:#3BAF5D;border-color:#B8F1CC;" @click="approve(item)">✅ 通过</button>
+              <button class="btn btn-sm btn-danger" @click="reject(item)">❌ 驳回</button>
+            </div>
+          </div>
+          <div v-if="pendingList.length === 0" style="text-align:center;padding:40px;color:#A898B8;">暂无待审核内容</div>
+        </template>
+
+        <!-- Approved Items -->
+        <template v-if="activeTab === 'approved'">
+          <div v-for="item in approvedList" :key="item.id" class="review-card approved">
+            <div class="review-icon">✅</div>
+            <div class="review-body">
+              <div class="review-title">{{ item.title }}</div>
+              <div class="review-content">用户「<b>{{ item.userName }}</b>」{{ item.content }}</div>
+              <div class="review-meta">ID: {{ item.userId }} · {{ item.time }}</div>
+            </div>
+            <div class="review-meta" style="margin-left:auto;">{{ item.reviewTime }}</div>
+          </div>
+          <div v-if="approvedList.length === 0" style="text-align:center;padding:40px;color:#A898B8;">暂无已通过内容</div>
+        </template>
+
+        <!-- Rejected Items -->
+        <template v-if="activeTab === 'rejected'">
+          <div v-for="item in rejectedList" :key="item.id" class="review-card rejected">
+            <div class="review-icon">❌</div>
+            <div class="review-body">
+              <div class="review-title">{{ item.title }}</div>
+              <div class="review-content">用户「<b>{{ item.userName }}</b>」{{ item.content }}</div>
+              <div class="review-meta">ID: {{ item.userId }} · {{ item.time }}</div>
+            </div>
+            <div class="review-body" style="min-width:200px;">
+              <div class="review-reason">违规原因：{{ item.reason }}</div>
+            </div>
+          </div>
+          <div v-if="rejectedList.length === 0" style="text-align:center;padding:40px;color:#A898B8;">暂无已驳回内容</div>
+        </template>
+      </div>
+    </div>
+
+    <!-- Reject Dialog -->
+    <el-dialog v-model="showRejectDialog" title="驳回内容" width="420px">
+      <div class="form-item">
+        <div class="form-label">违规原因</div>
+        <el-input v-model="rejectReason" type="textarea" :rows="3" placeholder="请输入违规原因" />
+      </div>
       <template #footer>
-        <el-button @click="showReject = false">取消</el-button>
-        <el-button type="danger" @click="confirmReject">确认</el-button>
+        <button class="btn" @click="showRejectDialog = false">取消</button>
+        <button class="btn btn-primary" @click="confirmReject">确认驳回</button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { contentReview } from '@/api/index.js'
 
-const type = ref('chat')
-const status = ref('')
-const currentPage = ref(1)
-const pageSize = ref(20)
-const total = ref(100)
-const showDetail = ref(false)
-const showReject = ref(false)
-const selected = ref(null)
+const activeTab = ref('pending')
+const showRejectDialog = ref(false)
 const rejectReason = ref('')
+const selectedItem = ref(null)
 
-const contentList = ref([
-  { id: 1, type: 'chat', content: '你好呀，今天天气真不错~', userName: '小明', petStatus: 'happy', status: 'approved', reportCount: 0, time: '10分钟前', createTime: '2026-04-15 10:30', rejectReason: '' },
-  { id: 2, type: 'chat', content: '这个游戏太好玩了！', userName: '小红', petStatus: 'happy', status: 'pending', reportCount: 2, time: '30分钟前', createTime: '2026-04-15 10:00', rejectReason: '' },
-  { id: 3, type: 'post', content: '我的宠物终于进化啦！开心~', userName: '小华', petStatus: 'excited', status: 'pending', reportCount: 1, time: '1小时前', createTime: '2026-04-15 09:30', rejectReason: '' },
-  { id: 4, type: 'comment', content: '好可爱呀！', userName: '阿月', petStatus: 'happy', status: 'rejected', reportCount: 5, time: '2小时前', createTime: '2026-04-15 08:00', rejectReason: '包含广告信息' },
-  { id: 5, type: 'chat', content: '有人想一起玩吗？', userName: '阿华', petStatus: 'normal', status: 'approved', reportCount: 0, time: '3小时前', createTime: '2026-04-15 07:00', rejectReason: '' }
-])
+const tabs = [
+  { label: '待处理', value: 'pending', icon: '🚨' },
+  { label: '已通过', value: 'approved', icon: '✅' },
+  { label: '已驳回', value: 'rejected', icon: '❌' }
+]
 
-const getTypeTag = (type) => ({ chat: '', post: 'warning', comment: 'info' }[type] || '')
-const getTypeName = (type) => ({ chat: '聊天', post: '动态', comment: '评论' }[type] || type)
-const getStatusTag = (status) => ({ pending: 'warning', approved: 'success', rejected: 'danger' }[status] || '')
-const getStatusName = (status) => ({ pending: '待审核', approved: '通过', rejected: '违规' }[status] || status)
+const pendingList = ref([])
+const approvedList = ref([])
+const rejectedList = ref([])
 
-const loadContent = () => {
-  console.log('Load content:', type.value, status.value, currentPage.value)
+const loadReviews = async () => {
+  try {
+    const res = await contentReview.list({ status: activeTab.value })
+    if (res.code === 200 && res.data) {
+      const list = res.data.list || []
+      if (activeTab.value === 'pending') {
+        pendingList.value = list.map(item => ({
+          id: item.id,
+          icon: '🚨',
+          title: item.type === 'nickname' ? '违规昵称' : '违规内容',
+          userName: item.userName || '未知',
+          userId: item.userId,
+          target: item.type === 'nickname' ? '宠物昵称' : '动态内容',
+          violation: item.violation || '',
+          reason: item.reason || '',
+          time: item.time || ''
+        }))
+      } else if (activeTab.value === 'approved') {
+        approvedList.value = list.map(item => ({
+          id: item.id,
+          title: item.title || '',
+          userName: item.userName || '',
+          userId: item.userId,
+          content: item.content || '',
+          time: item.time || '',
+          reviewTime: item.reviewTime || ''
+        }))
+      } else {
+        rejectedList.value = list.map(item => ({
+          id: item.id,
+          title: item.title || '',
+          userName: item.userName || '',
+          userId: item.userId,
+          content: item.content || '',
+          time: item.time || '',
+          reason: item.reason || ''
+        }))
+      }
+    }
+  } catch (e) {
+    console.error('加载审核列表失败', e)
+  }
 }
 
-const viewDetail = (row) => {
-  selected.value = row
-  showDetail.value = true
+const approve = async (item) => {
+  try {
+    const res = await contentReview.approve(item.id)
+    if (res.code === 200) {
+      ElMessage.success('已通过')
+      loadReviews()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
-const approve = (row) => {
-  row.status = 'approved'
-  ElMessage.success('已通过')
+const reject = (item) => {
+  selectedItem.value = item
+  rejectReason.value = ''
+  showRejectDialog.value = true
 }
 
-const showRejectDialog = () => {
-  showReject.value = true
-}
-
-const confirmReject = () => {
+const confirmReject = async () => {
   if (!rejectReason.value) {
     ElMessage.warning('请输入违规原因')
     return
   }
-  selected.value.status = 'rejected'
-  selected.value.rejectReason = rejectReason.value
-  showReject.value = false
-  showDetail.value = false
-  ElMessage.success('已标记违规')
-  rejectReason.value = ''
+  try {
+    const res = await contentReview.reject(selectedItem.value.id, { reason: rejectReason.value })
+    if (res.code === 200) {
+      ElMessage.success('已驳回')
+      showRejectDialog.value = false
+      loadReviews()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
 onMounted(() => {
-  loadContent()
+  loadReviews()
+})
+
+watch(activeTab, () => {
+  loadReviews()
 })
 </script>
 
 <style scoped>
-.content-page { padding: 0; }
+.admin-page { display: block; }
 
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.content-table { background: white; border-radius: 8px; }
-
-.content-cell { text-align: left; }
-
-.content-text {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.content-meta { font-size: 12px; color: #7A6B8A; }
-
-.pet-status {
+.tab-item {
   font-size: 12px;
-  padding: 2px 8px;
+  padding: 7px 14px;
   border-radius: 10px;
-  background: #E8FFF0;
-  color: #4A3F55;
-}
-
-.pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.detail-header { display: flex; gap: 8px; margin-bottom: 16px; }
-
-.detail-body {
-  padding: 16px;
-  background: #F8F8F8;
-  border-radius: 8px;
-  margin-bottom: 16px;
-}
-
-.detail-text { font-size: 14px; line-height: 1.6; margin: 0 0 12px 0; }
-
-.detail-meta {
-  display: flex;
-  gap: 16px;
-  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid #EDE4FF;
+  background: #fff;
   color: #7A6B8A;
+  transition: all 0.2s;
+}
+.tab-item.active {
+  background: #FF6B6B;
+  color: #fff;
+  border-color: #FF6B6B;
+}
+.tab-item:hover:not(.active) {
+  border-color: #D5AAFF;
+  color: #D5AAFF;
 }
 
-.detail-reason {
-  padding: 12px;
+.review-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: #FFF5F5;
+  border-radius: 14px;
+  border: 1px solid #FFE5E5;
+}
+.review-card.approved {
+  background: #F0FFF5;
+  border-color: #B8F1CC;
+}
+.review-card.rejected {
   background: #FFF0F0;
-  border-radius: 8px;
+  border-color: #FFE5E5;
 }
 
-.detail-reason h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-  color: #FF6B6B;
-}
+.review-icon { font-size: 28px; flex-shrink: 0; }
 
-.detail-reason p { margin: 0; font-size: 14px; }
+.review-body { flex: 1; }
+.review-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.review-content { font-size: 13px; color: #7A6B8A; }
+.review-meta { font-size: 11px; color: #A898B8; margin-top: 4px; }
+.review-reason { font-size: 12px; color: #FF6B6B; margin-top: 4px; }
+
+.review-actions { display: flex; flex-direction: column; gap: 6px; }
 </style>

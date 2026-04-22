@@ -1,113 +1,87 @@
 <template>
-  <div class="activities-page">
-    <div class="toolbar">
-      <el-button type="primary" @click="showAddDialog">创建活动</el-button>
-      <el-select v-model="statusFilter" placeholder="活动状态" @change="loadData">
-        <el-option label="全部" value="" />
-        <el-option label="进行中" value="ongoing" />
-        <el-option label="未开始" value="pending" />
-        <el-option label="已结束" value="ended" />
-      </el-select>
+  <div class="admin-page">
+    <div class="page-title">🎉 活动管理</div>
+    <div class="page-sub">配置节日活动、限时任务、运营活动</div>
+
+    <!-- Toolbar -->
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" @click="openAddModal">+ 创建活动</button>
+      </div>
     </div>
-    
-    <el-row :gutter="20" class="activity-grid">
-      <el-col :span="8" v-for="activity in activities" :key="activity.id">
-        <div class="activity-card" :class="activity.status">
-          <div class="card-header">
-            <el-tag :type="getStatusTag(activity.status)" size="small">
-              {{ getStatusName(activity.status) }}
-            </el-tag>
-            <el-dropdown>
-              <span class="el-dropdown-link">···</span>
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item @click="editActivity(activity)">编辑</el-dropdown-item>
-                  <el-dropdown-item @click="toggleActivity(activity)">
-                    {{ activity.status === 'ongoing' ? '暂停' : '开启' }}
-                  </el-dropdown-item>
-                  <el-dropdown-item divided @click="deleteActivity(activity)">删除</el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-          
-          <div class="card-body">
-            <h3 class="activity-name">{{ activity.name }}</h3>
-            <p class="activity-desc">{{ activity.description }}</p>
-            
-            <div class="activity-stats">
-              <div class="stat-item">
-                <span class="stat-value">{{ activity.participants }}</span>
-                <span class="stat-label">参与人数</span>
-              </div>
-              <div class="stat-item">
-                <span class="stat-value">{{ activity.rewards }}</span>
-                <span class="stat-label">奖励发放</span>
-              </div>
-            </div>
-            
-            <div class="activity-time">
-              <span class="time-icon">📅</span>
-              <span>{{ activity.startTime }} ~ {{ activity.endTime }}</span>
-            </div>
-          </div>
-          
-          <div class="card-footer">
-            <el-button size="small" @click="viewDetail(activity)">数据详情</el-button>
-            <el-button size="small" type="primary" @click="editActivity(activity)">编辑</el-button>
-          </div>
+
+    <!-- Activity Grid -->
+    <div class="activity-grid">
+      <div
+        v-for="activity in activities"
+        :key="activity.id"
+        class="activity-card"
+        :class="{ 'card-active': activity.statusText === '进行中', 'card-ended': activity.statusText === '已结束' }"
+        :style="activity.statusText === '进行中' ? 'border:2px solid #FFD166;' : ''"
+      >
+        <div class="activity-card-header">
+          <div style="font-size:14px;font-weight:700;">{{ activity.icon }} {{ activity.name }}</div>
+          <span :class="['badge', activity.statusBadge]">{{ activity.statusText }}</span>
         </div>
-      </el-col>
-    </el-row>
-    
-    <!-- 创建/编辑活动弹窗 -->
-    <el-dialog v-model="showDialog" :title="isEdit ? '编辑活动' : '创建活动'" width="700px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="活动名称" required>
-          <el-input v-model="form.name" placeholder="请输入活动名称" />
-        </el-form-item>
-        <el-form-item label="活动描述">
-          <el-input v-model="form.description" type="textarea" :rows="2" placeholder="请输入活动描述" />
-        </el-form-item>
-        <el-form-item label="活动类型" required>
-          <el-select v-model="form.type" placeholder="请选择">
+        <div class="activity-card-time">{{ activity.startTime }} ~ {{ activity.endTime }}</div>
+        <div class="activity-card-desc">{{ activity.desc }}</div>
+        <div class="activity-card-participants">参与人数：{{ activity.participants.toLocaleString() }}</div>
+        <div class="activity-card-actions">
+          <button class="btn btn-sm" @click="openEditModal(activity)">编辑</button>
+          <button class="btn btn-sm btn-danger" v-if="activity.statusText === '进行中'" @click="endActivity(activity)">结束活动</button>
+          <button class="btn btn-sm" v-if="activity.statusText === '已结束'" @click="viewData(activity)">查看数据</button>
+        </div>
+      </div>
+      <div v-if="activities.length === 0" style="grid-column:1/-1;text-align:center;padding:60px;color:#A898B8;">暂无活动</div>
+    </div>
+
+    <!-- Create/Edit Activity Modal -->
+    <el-dialog v-model="showModal" :title="isEdit ? '编辑活动' : '+ 创建活动'" width="600px">
+      <div class="form-item">
+        <div class="form-label">活动名称</div>
+        <el-input v-model="form.name" placeholder="请输入活动名称" />
+      </div>
+      <div class="form-item">
+        <div class="form-label">活动描述</div>
+        <el-input v-model="form.desc" type="textarea" :rows="2" placeholder="请输入活动描述" />
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">活动类型</div>
+          <el-select v-model="form.type" style="width:100%;">
             <el-option label="登录活动" value="login" />
             <el-option label="充值活动" value="recharge" />
             <el-option label="任务活动" value="task" />
             <el-option label="抽奖活动" value="lottery" />
             <el-option label="排行榜活动" value="rank" />
           </el-select>
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="开始时间" required>
-              <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="结束时间" required>
-              <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="活动规则">
-          <el-input v-model="form.rules" type="textarea" :rows="3" placeholder="请输入活动规则" />
-        </el-form-item>
-        <el-form-item label="奖励设置">
-          <div class="reward-list">
-            <div v-for="(reward, i) in form.rewards" :key="i" class="reward-item">
-              <el-input v-model="reward.name" placeholder="奖励名称" style="width: 150px" />
-              <el-input-number v-model="reward.count" :min="0" placeholder="数量" />
-              <el-button @click="removeReward(i)" :disabled="form.rewards.length <= 1">删除</el-button>
-            </div>
-            <el-button @click="addReward">添加奖励</el-button>
-          </div>
-        </el-form-item>
-      </el-form>
+        </div>
+        <div class="form-item">
+          <div class="form-label">状态</div>
+          <el-select v-model="form.status" style="width:100%;">
+            <el-option label="未开始" value="pending" />
+            <el-option label="进行中" value="ongoing" />
+            <el-option label="已结束" value="ended" />
+          </el-select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">开始时间</div>
+          <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间" style="width:100%;" />
+        </div>
+        <div class="form-item">
+          <div class="form-label">结束时间</div>
+          <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" style="width:100%;" />
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">活动奖励</div>
+        <el-input v-model="form.rewards" placeholder="如: 金币x100, 限定服装x1" />
+      </div>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
-        <el-button @click="saveActivity">保存</el-button>
-        <el-button type="primary" @click="publishActivity">发布活动</el-button>
+        <button class="btn" @click="showModal = false">取消</button>
+        <button class="btn btn-primary" @click="saveActivity">保存</button>
       </template>
     </el-dialog>
   </div>
@@ -116,263 +90,174 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { activityAdmin } from '@/api/index.js'
 
-const statusFilter = ref('')
-const showDialog = ref(false)
+const showModal = ref(false)
 const isEdit = ref(false)
-const selected = ref(null)
+const currentActivity = ref(null)
 
 const form = ref({
   name: '',
-  description: '',
+  desc: '',
   type: 'login',
+  status: 'pending',
   startTime: '',
   endTime: '',
-  rules: '',
-  rewards: [{ name: '', count: 0 }]
+  rewards: ''
 })
 
-const activities = ref([
-  {
-    id: 1,
-    name: '周末登录送好礼',
-    description: '周末登录即可领取神秘礼包',
-    type: 'login',
-    status: 'ongoing',
-    participants: 1256,
-    rewards: 890,
-    startTime: '2026-04-12 00:00',
-    endTime: '2026-04-20 23:59'
-  },
-  {
-    id: 2,
-    name: '充值返利活动',
-    description: '充值满100送50，多充多送',
-    type: 'recharge',
-    status: 'ended',
-    participants: 456,
-    rewards: 456,
-    startTime: '2026-04-01 00:00',
-    endTime: '2026-04-10 23:59'
-  },
-  {
-    id: 3,
-    name: '劳动节任务活动',
-    description: '完成任务获得双倍经验',
-    type: 'task',
-    status: 'pending',
-    participants: 0,
-    rewards: 0,
-    startTime: '2026-05-01 00:00',
-    endTime: '2026-05-07 23:59'
-  },
-  {
-    id: 4,
-    name: '幸运大转盘',
-    description: '每日抽奖，百分百中奖',
-    type: 'lottery',
-    status: 'ongoing',
-    participants: 2345,
-    rewards: 2345,
-    startTime: '2026-04-08 00:00',
-    endTime: '2026-04-30 23:59'
-  },
-  {
-    id: 5,
-    name: '等级排行榜',
-    description: '等级排名前十获得限定称号',
-    type: 'rank',
-    status: 'ongoing',
-    participants: 5678,
-    rewards: 10,
-    startTime: '2026-04-01 00:00',
-    endTime: '2026-04-30 23:59'
-  }
-])
+const activities = ref([])
 
-const getStatusTag = (status) => ({ ongoing: 'success', pending: 'warning', ended: 'info' }[status] || '')
-const getStatusName = (status) => ({ ongoing: '进行中', pending: '未开始', ended: '已结束' }[status] || status)
-
-const loadData = () => {
-  console.log('Load:', statusFilter.value)
+const getStatusBadge = (status) => {
+  return { ongoing: 'badge-green', pending: 'badge-yellow', ended: 'badge-red' }[status] || 'badge-yellow'
 }
 
-const showAddDialog = () => {
+const getStatusText = (status) => {
+  return { ongoing: '进行中', pending: '未开始', ended: '已结束' }[status] || '未知'
+}
+
+const loadActivities = async () => {
+  try {
+    const res = await activityAdmin.list()
+    if (res.code === 200 && res.data) {
+      activities.value = res.data.map(a => ({
+        id: a.id,
+        name: a.name || '',
+        icon: a.icon || '🎉',
+        desc: a.desc || '',
+        type: a.type || 'login',
+        status: a.status || 'pending',
+        statusText: getStatusText(a.status),
+        statusBadge: getStatusBadge(a.status),
+        startTime: a.startTime || '',
+        endTime: a.endTime || '',
+        participants: a.participants || 0
+      }))
+    }
+  } catch (e) {
+    console.error('加载活动失败', e)
+  }
+}
+
+const openAddModal = () => {
   isEdit.value = false
-  form.value = {
-    name: '',
-    description: '',
-    type: 'login',
-    startTime: '',
-    endTime: '',
-    rules: '',
-    rewards: [{ name: '', count: 0 }]
-  }
-  showDialog.value = true
+  form.value = { name: '', desc: '', type: 'login', status: 'pending', startTime: '', endTime: '', rewards: '' }
+  showModal.value = true
 }
 
-const editActivity = (activity) => {
+const openEditModal = (activity) => {
   isEdit.value = true
-  selected.value = activity
-  form.value = { ...activity, rewards: activity.rewards || [{ name: '', count: 0 }] }
-  showDialog.value = true
+  currentActivity.value = activity
+  form.value = { name: activity.name, desc: activity.desc, type: activity.type, status: activity.status, startTime: activity.startTime, endTime: activity.endTime, rewards: '' }
+  showModal.value = true
 }
 
-const viewDetail = (activity) => {
+const saveActivity = async () => {
+  if (!form.value.name) { ElMessage.warning('请输入活动名称'); return }
+  if (!form.value.startTime || !form.value.endTime) { ElMessage.warning('请选择活动时间'); return }
+  try {
+    const data = {
+      name: form.value.name,
+      desc: form.value.desc,
+      type: form.value.type,
+      status: form.value.status,
+      startTime: form.value.startTime,
+      endTime: form.value.endTime,
+      rewards: form.value.rewards
+    }
+    let res
+    if (isEdit.value) {
+      res = await activityAdmin.update(currentActivity.value.id, data)
+    } else {
+      res = await activityAdmin.create(data)
+    }
+    if (res.code === 200) {
+      ElMessage.success(isEdit.value ? '活动已更新' : '活动已创建')
+      showModal.value = false
+      loadActivities()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+const endActivity = async (activity) => {
+  try {
+    await ElMessageBox.confirm(`确定要结束活动「${activity.name}」吗？`, '提示')
+    const res = await activityAdmin.end(activity.id)
+    if (res.code === 200) {
+      ElMessage.success('活动已结束')
+      loadActivities()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('操作失败')
+  }
+}
+
+const viewData = (activity) => {
   ElMessage.info('数据详情开发中...')
 }
 
-const toggleActivity = (activity) => {
-  activity.status = activity.status === 'ongoing' ? 'pending' : 'ongoing'
-  ElMessage.success(`活动已${activity.status === 'ongoing' ? '开启' : '暂停'}`)
-}
-
-const deleteActivity = (activity) => {
-  ElMessageBox.confirm(`确定要删除活动"${activity.name}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('活动已删除')
-    loadData()
-  })
-}
-
-const addReward = () => {
-  form.value.rewards.push({ name: '', count: 0 })
-}
-
-const removeReward = (i) => {
-  form.value.rewards.splice(i, 1)
-}
-
-const saveActivity = () => {
-  if (!validateForm()) return
-  ElMessage.success('活动已保存')
-  showDialog.value = false
-}
-
-const publishActivity = () => {
-  if (!validateForm()) return
-  ElMessage.success('活动已发布')
-  showDialog.value = false
-  loadData()
-}
-
-const validateForm = () => {
-  if (!form.value.name) {
-    ElMessage.warning('请输入活动名称')
-    return false
-  }
-  if (!form.value.startTime || !form.value.endTime) {
-    ElMessage.warning('请选择活动时间')
-    return false
-  }
-  return true
-}
-
 onMounted(() => {
-  loadData()
+  loadActivities()
 })
 </script>
 
 <style scoped>
-.activities-page { padding: 0; }
+.admin-page { display: block; }
 
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+.activity-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
 }
-
-.activity-grid { margin-top: 0; }
 
 .activity-card {
-  background: white;
-  border-radius: 12px;
+  background: #fff;
+  border-radius: 18px;
   padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  transition: all 0.3s;
+  box-shadow: 0 2px 10px rgba(180, 150, 200, 0.07);
+  border: 1px solid #F5EEF8;
 }
 
-.activity-card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+.card-active {
+  border: 2px solid #FFD166;
 }
 
-.activity-card.ended {
-  opacity: 0.7;
+.card-ended {
+  opacity: 0.75;
 }
 
-.card-header {
+.activity-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.activity-name {
-  margin: 0 0 8px 0;
-  font-size: 16px;
-  font-weight: 600;
+.activity-card-time {
+  font-size: 12px;
+  color: #7A6B8A;
+  margin-bottom: 8px;
 }
 
-.activity-desc {
-  margin: 0 0 16px 0;
+.activity-card-desc {
   font-size: 13px;
-  color: #7A6B8A;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin-bottom: 10px;
 }
 
-.activity-stats {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 16px;
-}
-
-.stat-item {
-  display: flex;
-  flex-direction: column;
-}
-
-.stat-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--accent-purple);
-}
-
-.stat-label {
+.activity-card-participants {
   font-size: 12px;
   color: #7A6B8A;
+  margin-bottom: 12px;
 }
 
-.activity-time {
+.activity-card-actions {
   display: flex;
-  align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: #7A6B8A;
-  margin-bottom: 16px;
-}
-
-.card-footer {
-  display: flex;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #F0F0F0;
-}
-
-.reward-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.reward-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
 }
 </style>

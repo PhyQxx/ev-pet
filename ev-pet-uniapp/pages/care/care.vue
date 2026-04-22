@@ -1,13 +1,16 @@
 <template>
   <view class="page">
     <!-- Header -->
-    <view class="header">
-      <view class="header-title">养成中心</view>
-      <view class="gold-chip">
-        <text style="font-size:28rpx;">💰</text>
-        <text class="gold-value">{{ petInfo?.gold || userInfo?.gold || 0 }}</text>
+    <header class="header">
+      <button class="back-btn" @click="goBack">
+        <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <text class="header-title">养成中心</text>
+      <view class="header-coins">
+        <text class="coin-icon">💰</text>
+        <text class="coin-value">{{ petInfo?.gold || userInfo?.gold || 0 }}</text>
       </view>
-    </view>
+    </header>
 
     <!-- Pet Display -->
     <view class="pet-display">
@@ -18,7 +21,7 @@
     </view>
 
     <!-- Status Bars -->
-    <view class="status-section">
+    <section class="status-section">
       <view class="status-card">
         <view class="status-row">
           <view class="status-item">
@@ -57,12 +60,36 @@
               </view>
             </view>
           </view>
+          <view class="status-item">
+            <view class="status-icon-wrap" style="background:rgba(213,170,255,0.3);">🤝</view>
+            <view class="status-info">
+              <view class="status-label-row">
+                <text class="status-name">清洁度</text>
+                <text class="status-num">{{ clean }}/100</text>
+              </view>
+              <view class="status-bar">
+                <view class="status-fill clean" :class="{ low: clean < 20 }" :style="{ width: clean + '%' }"></view>
+              </view>
+            </view>
+          </view>
+          <view class="status-item">
+            <view class="status-icon-wrap" style="background:rgba(184,241,204,0.3);">💕</view>
+            <view class="status-info">
+              <view class="status-label-row">
+                <text class="status-name">亲密度</text>
+                <text class="status-num">{{ intimacy }}/100</text>
+              </view>
+              <view class="status-bar">
+                <view class="status-fill intimacy" :style="{ width: intimacy + '%' }"></view>
+              </view>
+            </view>
+          </view>
         </view>
       </view>
-    </view>
+    </section>
 
     <!-- Care Actions -->
-    <view class="care-section">
+    <section class="care-section">
       <view class="section-title">日常照料</view>
       <view class="care-grid">
         <view class="care-card">
@@ -86,18 +113,18 @@
           <view class="care-reward play">❤️ 心情+30</view>
           <button class="care-btn play" @click="doCare('play')">开始陪玩</button>
         </view>
-        <view class="care-card" @click="toWork">
-          <view class="care-icon" style="background:rgba(184,241,204,0.3);">💼</view>
-          <view class="care-title">打工</view>
-          <view class="care-desc">宠物外出赚钱</view>
-          <view class="care-reward work">💰 金币+50~200</view>
-          <button class="care-btn work">安排打工</button>
+        <view class="care-card">
+          <view class="care-icon" style="background:rgba(184,241,204,0.3);">💤</view>
+          <view class="care-title">休息</view>
+          <view class="care-desc">恢复体力</view>
+          <view class="care-reward rest">⚡ 体力+40</view>
+          <button class="care-btn rest" @click="doCare('rest')">开始休息</button>
         </view>
       </view>
-    </view>
+    </section>
 
     <!-- Evolution Preview -->
-    <view class="evo-section">
+    <section class="evo-section">
       <view class="section-title">进化预览</view>
       <view class="evo-card">
         <view class="evo-stage">{{ nextStageEmoji }}</view>
@@ -110,7 +137,22 @@
           <view class="evo-progress-label">{{ currentExp }} / {{ totalExp }} EXP</view>
         </view>
       </view>
-    </view>
+    </section>
+
+    <!-- Growth Timeline -->
+    <section class="timeline-section">
+      <view class="section-title">成长记录</view>
+      <view class="timeline-list">
+        <view class="timeline-item" v-for="record in growthRecords" :key="record.id">
+          <view class="timeline-dot" :style="{ background: record.color }"></view>
+          <view class="timeline-content">
+            <text class="timeline-title">{{ record.title }}</text>
+            <text class="timeline-date">{{ record.date }}</text>
+          </view>
+          <text class="timeline-exp">+{{ record.exp }} EXP</text>
+        </view>
+      </view>
+    </section>
 
     <!-- Action Overlay -->
     <view class="action-overlay" :class="{ show: actionVisible }">
@@ -140,7 +182,14 @@ export default {
       actionDesc: '',
       actionCompleteText: '',
       actionProgress: 0,
-      actionDone: false
+      actionDone: false,
+      growthRecords: [
+        { id: 1, title: '完成首次喂食', date: '4月12日', exp: 10, color: '#FFE5A0' },
+        { id: 2, title: '陪玩获得开心笑容', date: '4月13日', exp: 20, color: '#D5AAFF' },
+        { id: 3, title: '洗澡后毛发变亮', date: '4月14日', exp: 15, color: '#A8D8EA' },
+        { id: 4, title: '成功打工赚取金币', date: '4月15日', exp: 50, color: '#B8F1CC' },
+        { id: 5, title: '解锁新技能', date: '4月16日', exp: 100, color: '#FFB3C6' }
+      ]
     }
   },
   computed: {
@@ -153,6 +202,8 @@ export default {
     health() { return this.petInfo?.health || 0 },
     fullness() { return this.petInfo?.fullness || 0 },
     petMood() { return this.petInfo?.mood || 0 },
+    clean() { return this.petInfo?.clean || 80 },
+    intimacy() { return this.petInfo?.intimacy || 50 },
     currentExp() { return this.petInfo?.exp || 0 },
     totalExp() { return this.petInfo?.nextEvolutionExp || 100 },
     remainingExp() { return Math.max(0, this.totalExp - this.currentExp) },
@@ -180,7 +231,8 @@ export default {
       const configs = {
         feed: { title: '喂食中...', desc: '小福正在享用美食~ 🍖', complete: '✨ 完成！饱食+25', api: 'feed' },
         bath: { title: '洗澡中...', desc: '小福正在洗香香~ 🚿', complete: '✨ 完成！心情+10', api: 'bath' },
-        play: { title: '玩耍中...', desc: '小福玩得好开心~ 🎾', complete: '✨ 完成！心情+30', api: 'play' }
+        play: { title: '玩耍中...', desc: '小福玩得好开心~ 🎾', complete: '✨ 完成！心情+30', api: 'play' },
+        rest: { title: '休息中...', desc: '小福正在好好休息~ 💤', complete: '✨ 完成！体力+40', api: 'rest' }
       }
       const cfg = configs[type]
       if (!cfg) return
@@ -209,17 +261,44 @@ export default {
         }
       }, 80)
     },
-    toWork() {
-      uni.navigateTo({ url: '/pages/work/work' })
+    goBack() {
+      uni.navigateBack()
     }
   }
 }
 </script>
 
 <style scoped>
+page {
+  --primary: #FFB3C6;
+  --primary-dark: #FF8FAB;
+  --primary-light: #FFD5E5;
+  --secondary: #A8D8EA;
+  --secondary-dark: #7EC8D8;
+  --secondary-light: #D5E8F0;
+  --yellow: #FFE5A0;
+  --yellow-dark: #FFD166;
+  --yellow-light: #FFF4C2;
+  --purple: #D5AAFF;
+  --purple-light: #EDE4FF;
+  --green: #B8F1CC;
+  --coral: #FFACA8;
+  --red: #FF6B6B;
+  --bg: #FFF8FA;
+  --bg-page: #EEE8F5;
+  --text: #4A3F55;
+  --text-secondary: #7A6B8A;
+  --text-muted: #A898B8;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-full: 999px;
+  --shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+  --shadow-lg: 0 8px 32px rgba(80, 60, 100, 0.14);
+}
+
 .page {
   min-height: 100vh;
-  background: #F5EEF8;
+  background: #EEE8F5;
   padding-bottom: 140rpx;
 }
 
@@ -228,132 +307,164 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 24rpx 32rpx 16rpx;
+  padding: 12px 16px 8px;
 }
-.header-title { font-size: 32rpx; font-weight: 700; color: #4A3F55; }
-.gold-chip {
-  display: flex; align-items: center; gap: 8rpx;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16rpx);
-  padding: 12rpx 20rpx;
-  border-radius: 999rpx;
-  box-shadow: 0 4rpx 16rpx rgba(80,60,100,0.08);
+.back-btn {
+  width: 34px; height: 34px;
+  border-radius: 12px;
+  border: none; background: rgba(255,255,255,0.8); backdrop-filter: blur(8px);
+  color: #7A6B8A; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 150ms;
+  padding: 0;
 }
-.gold-value { font-size: 28rpx; font-weight: 700; color: #4A3F55; }
+.back-btn:active { transform: scale(0.92); background: #FFD5E5; }
+.back-btn svg { width: 18px; height: 18px; }
+.header-title { font-size: 16px; font-weight: 700; color: #4A3F55; }
+.header-coins {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.85); backdrop-filter: blur(8px);
+  padding: 6px 12px; border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
+}
+.coin-icon { font-size: 16px; }
+.coin-value { font-size: 14px; font-weight: 700; color: #4A3F55; }
 
 /* Pet Display */
-.pet-display { display: flex; justify-content: center; padding: 0 32rpx 24rpx; }
+.pet-display { display: flex; justify-content: center; padding: 0 16px 12px; }
 .pet-stage {
-  width: 280rpx; height: 280rpx;
+  width: 180px; height: 180px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
   display: flex; align-items: center; justify-content: center;
   position: relative;
-  box-shadow: 0 8rpx 48rpx rgba(255,179,198,0.35);
+  box-shadow: 0 8px 32px rgba(255,179,198,0.3);
   animation: petGlow 3s ease-in-out infinite;
 }
 @keyframes petGlow {
-  0%, 100% { box-shadow: 0 8rpx 48rpx rgba(255,179,198,0.35); }
-  50% { box-shadow: 0 8rpx 56rpx rgba(213,170,255,0.45); }
+  0%, 100% { box-shadow: 0 8px 32px rgba(255,179,198,0.3); }
+  50% { box-shadow: 0 8px 40px rgba(213,170,255,0.4); }
 }
-.pet-sprite { font-size: 160rpx; animation: petBreathe 2s ease-in-out infinite; }
-@keyframes petBreathe { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-8rpx) scale(1.02);} }
+.pet-sprite { font-size: 100px; animation: petBreathe 2s ease-in-out infinite; }
+@keyframes petBreathe { 0%,100%{transform:translateY(0) scale(1);} 50%{transform:translateY(-5px) scale(1.02);} }
 .pet-badge {
-  position: absolute; top: 16rpx; right: 16rpx;
+  position: absolute; top: 8px; right: 8px;
   background: #FFE5A0; color: #4A3F55;
-  font-size: 20rpx; font-weight: 700;
-  padding: 6rpx 16rpx; border-radius: 999rpx;
-  box-shadow: 0 2rpx 8rpx rgba(255,209,102,0.4);
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(255,209,102,0.4);
 }
 
 /* Status Bars */
-.status-section { padding: 0 32rpx; }
+.status-section { padding: 0 16px 8px; }
 .status-card {
   background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(24rpx);
-  border-radius: 32rpx;
-  padding: 28rpx;
-  box-shadow: 0 4rpx 24rpx rgba(80,60,100,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 14px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
-.status-row { display: flex; flex-direction: column; gap: 20rpx; }
-.status-item { display: flex; align-items: center; gap: 16rpx; }
+.status-row { display: flex; flex-direction: column; gap: 10px; }
+.status-item { display: flex; align-items: center; gap: 10px; }
 .status-icon-wrap {
-  width: 64rpx; height: 64rpx; border-radius: 16rpx;
-  display: flex; align-items: center; justify-content: center; font-size: 32rpx; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
 }
 .status-info { flex: 1; min-width: 0; }
-.status-label-row { display: flex; justify-content: space-between; margin-bottom: 8rpx; }
-.status-name { font-size: 24rpx; font-weight: 600; color: #7A6B8A; }
-.status-num { font-size: 24rpx; font-weight: 700; color: #4A3F55; }
-.status-bar { height: 16rpx; border-radius: 8rpx; background: rgba(0,0,0,0.07); overflow: hidden; }
-.status-fill { height: 100%; border-radius: 8rpx; transition: width 600ms ease; }
+.status-label-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.status-name { font-size: 12px; font-weight: 600; color: #7A6B8A; }
+.status-num { font-size: 12px; font-weight: 700; color: #4A3F55; }
+.status-bar { height: 10px; border-radius: 5px; background: rgba(0,0,0,0.07); overflow: hidden; }
+.status-fill { height: 100%; border-radius: 5px; transition: width 600ms ease; }
 .status-fill.health { background: linear-gradient(90deg, #A8D8EA, #7EC8D8); }
 .status-fill.fullness { background: linear-gradient(90deg, #FFE5A0, #FFD166); }
 .status-fill.mood { background: linear-gradient(90deg, #FFB3C6, #FF8FAB); }
+.status-fill.clean { background: linear-gradient(90deg, #D5AAFF, #B080E0); }
+.status-fill.intimacy { background: linear-gradient(90deg, #FFACA8, #FF8FAB); }
 .status-fill.low { background: linear-gradient(90deg, #FFACA8, #FF6B6B) !important; animation: pulseFill 1s ease-in-out infinite; }
 @keyframes pulseFill { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
 
-/* Care Grid */
-.care-section { padding: 32rpx 32rpx 16rpx; }
-.section-title { font-size: 30rpx; font-weight: 700; color: #4A3F55; margin-bottom: 20rpx; }
-.care-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20rpx; }
+/* Care Actions */
+.care-section { padding: 16px 16px 8px; }
+.section-title { font-size: 15px; font-weight: 700; color: #4A3F55; margin-bottom: 12px; }
+.care-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .care-card {
   background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(24rpx);
-  border-radius: 28rpx;
-  padding: 28rpx 20rpx;
-  display: flex; flex-direction: column; align-items: center; gap: 8rpx;
-  box-shadow: 0 4rpx 24rpx rgba(80,60,100,0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  padding: 18px 16px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
 .care-icon {
-  width: 96rpx; height: 96rpx; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 52rpx; margin-bottom: 4rpx;
+  width: 60px; height: 60px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 4px;
 }
-.care-title { font-size: 30rpx; font-weight: 700; color: #4A3F55; }
-.care-desc { font-size: 22rpx; color: #A898B8; text-align: center; }
+.care-title { font-size: 15px; font-weight: 700; color: #4A3F55; }
+.care-desc { font-size: 11px; color: #A898B8; text-align: center; }
 .care-reward {
-  display: flex; align-items: center; gap: 4rpx;
-  padding: 6rpx 16rpx; border-radius: 999rpx;
-  font-size: 22rpx; font-weight: 600;
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
 }
 .care-reward.feed { background: rgba(255,224,160,0.3); color: #C49A1A; }
 .care-reward.clean { background: rgba(168,216,234,0.3); color: #4A8FA0; }
 .care-reward.play { background: rgba(213,170,255,0.3); color: #9060C0; }
-.care-reward.work { background: rgba(184,241,204,0.3); color: #5DA06B; }
+.care-reward.rest { background: rgba(184,241,204,0.3); color: #5DA06B; }
 .care-btn {
-  width: 100%; height: 64rpx;
-  border-radius: 999rpx;
+  width: 100%; height: 36px;
+  border-radius: 999px;
   border: none;
-  font-size: 26rpx; font-weight: 700;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 150ms;
   font-family: inherit;
   margin-top: 8rpx;
 }
 .care-btn.feed { background: linear-gradient(135deg, #FFE5A0, #FFD166); color: #6B4A00; }
 .care-btn.clean { background: linear-gradient(135deg, #A8D8EA, #7EC8D8); color: #1A5F72; }
 .care-btn.play { background: linear-gradient(135deg, #D5AAFF, #B080E0); color: white; }
-.care-btn.work { background: linear-gradient(135deg, #B8F1CC, #8FD8A0); color: #2D6B3F; }
+.care-btn.rest { background: linear-gradient(135deg, #B8F1CC, #8FD8A0); color: #2D6B3F; }
+.care-btn:active { transform: scale(0.96); filter: brightness(0.92); }
+.care-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Evolution */
-.evo-section { padding: 24rpx 32rpx 16rpx; }
+.evo-section { padding: 16px 16px 8px; }
 .evo-card {
   background: linear-gradient(135deg, rgba(255,224,160,0.3), rgba(213,170,255,0.3));
-  border-radius: 28rpx;
-  padding: 24rpx;
-  display: flex; align-items: center; gap: 24rpx;
-  box-shadow: 0 4rpx 24rpx rgba(80,60,100,0.08);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: 0 4px 16px rgba(80, 60, 100, 0.08);
 }
 .evo-stage {
-  width: 100rpx; height: 100rpx; border-radius: 50%;
+  width: 64px; height: 64px; border-radius: 50%;
   background: rgba(255,255,255,0.8);
-  display: flex; align-items: center; justify-content: center; font-size: 56rpx; flex-shrink: 0;
-  border: 3rpx solid rgba(255,255,255,0.9);
+  display: flex; align-items: center; justify-content: center; font-size: 36px; flex-shrink: 0;
+  border: 2px solid rgba(255,255,255,0.9);
 }
 .evo-info { flex: 1; }
-.evo-title { font-size: 28rpx; font-weight: 700; color: #4A3F55; margin-bottom: 6rpx; }
-.evo-desc { font-size: 24rpx; color: #7A6B8A; margin-bottom: 12rpx; }
-.evo-progress-bar { height: 12rpx; border-radius: 6rpx; background: rgba(0,0,0,0.1); overflow: hidden; }
-.evo-progress-fill { height: 100%; border-radius: 6rpx; background: linear-gradient(90deg, #FFE5A0, #D5AAFF); transition: width 600ms ease; }
-.evo-progress-label { font-size: 20rpx; color: #A898B8; margin-top: 4rpx; }
+.evo-title { font-size: 14px; font-weight: 700; color: #4A3F55; margin-bottom: 4px; }
+.evo-desc { font-size: 12px; color: #7A6B8A; margin-bottom: 8px; }
+.evo-progress-bar { height: 6px; border-radius: 3px; background: rgba(0,0,0,0.1); overflow: hidden; }
+.evo-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #FFE5A0, #D5AAFF); transition: width 600ms ease; }
+.evo-progress-label { font-size: 10px; color: #A898B8; margin-top: 3px; }
+
+/* Growth Timeline */
+.timeline-section { padding: 16px 16px 8px; }
+.timeline-list { display: flex; flex-direction: column; gap: 8px; }
+.timeline-item {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 2px 8px rgba(80, 60, 100, 0.06);
+}
+.timeline-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+.timeline-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.timeline-title { font-size: 13px; font-weight: 600; color: #4A3F55; }
+.timeline-date { font-size: 11px; color: #A898B8; }
+.timeline-exp { font-size: 12px; font-weight: 700; color: #D4A000; }
 
 /* Action Overlay */
 .action-overlay {
@@ -364,17 +475,17 @@ export default {
 }
 .action-overlay.show { opacity: 1; pointer-events: all; }
 .action-modal {
-  background: #FFFFFF; border-radius: 32rpx;
-  padding: 48rpx 40rpx; width: 480rpx;
+  background: #FFFFFF; border-radius: 20px;
+  padding: 24px; width: 280px;
   text-align: center;
   animation: modalIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-@keyframes modalIn { from { opacity: 0; transform: scale(0.8) translateY(30rpx); } to { opacity: 1; transform: scale(1) translateY(0); } }
-.action-pet-big { font-size: 160rpx; margin-bottom: 16rpx; }
-.action-title { font-size: 32rpx; font-weight: 700; color: #4A3F55; margin-bottom: 8rpx; }
-.action-desc { font-size: 26rpx; color: #7A6B8A; margin-bottom: 24rpx; }
-.action-progress { height: 12rpx; border-radius: 6rpx; background: rgba(0,0,0,0.07); margin-bottom: 16rpx; overflow: hidden; }
-.action-progress-fill { height: 100%; border-radius: 6rpx; background: linear-gradient(90deg, #FFB3C6, #D5AAFF); transition: width 200ms ease; }
-.action-complete { font-size: 26rpx; font-weight: 700; color: #5DA06B; display: none; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.8) translateY(30px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.action-pet-big { font-size: 80px; margin-bottom: 12px; }
+.action-title { font-size: 16px; font-weight: 700; color: #4A3F55; margin-bottom: 4px; }
+.action-desc { font-size: 13px; color: #7A6B8A; margin-bottom: 16px; }
+.action-progress { height: 8px; border-radius: 4px; background: rgba(0,0,0,0.07); margin-bottom: 12px; overflow: hidden; }
+.action-progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #FFB3C6, #D5AAFF); transition: width 200ms ease; }
+.action-complete { font-size: 13px; font-weight: 700; color: #5DA06B; display: none; }
 .action-complete.show { display: block; }
 </style>

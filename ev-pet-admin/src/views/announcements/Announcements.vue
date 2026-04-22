@@ -1,175 +1,209 @@
 <template>
-  <div class="announcements-page">
-    <div class="toolbar">
-      <el-button type="primary" @click="showAddDialog">发布公告</el-button>
-      <el-select v-model="typeFilter" placeholder="公告类型" @change="loadData">
-        <el-option label="全部" value="" />
-        <el-option label="系统公告" value="system" />
-        <el-option label="活动公告" value="activity" />
-        <el-option label="维护公告" value="maintenance" />
-      </el-select>
+  <div class="admin-page">
+    <div class="page-title">📢 公告管理</div>
+    <div class="page-sub">创建、编辑全端推送公告与弹窗</div>
+
+    <!-- Toolbar -->
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" @click="openAddModal">+ 创建公告</button>
+        <el-select v-model="typeFilter" placeholder="全部类型" style="width:130px;" clearable @change="loadData">
+          <el-option label="全部类型" value="" />
+          <el-option label="系统公告" value="system" />
+          <el-option label="活动公告" value="activity" />
+          <el-option label="维护通知" value="maintenance" />
+        </el-select>
+      </div>
     </div>
-    
-    <el-table :data="announcements" stripe class="table">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column label="公告信息" min-width="300">
-        <template #default="{ row }">
-          <div class="announce-cell">
-            <h4 class="announce-title">{{ row.title }}</h4>
-            <p class="announce-content">{{ row.content }}</p>
+
+    <!-- Announcement List -->
+    <div class="card">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div v-for="item in filteredList" :key="item.id" class="announce-item">
+          <div class="announce-icon" :style="{ background: item.iconBg }">{{ item.icon }}</div>
+          <div class="announce-body">
+            <div class="announce-title">{{ item.title }}</div>
+            <div class="announce-meta">{{ item.time }} · {{ item.scope }} · <span :class="['badge', item.statusBadge]">{{ item.statusText }}</span></div>
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="类型" width="120">
-        <template #default="{ row }">
-          <el-tag size="small" :type="getTypeTag(row.type)">{{ getTypeName(row.type) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="范围" width="100">
-        <template #default="{ row }">
-          {{ row.scope === 'all' ? '全量' : '指定用户' }}
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-tag size="small" :type="row.status === 'published' ? 'success' : 'info'">
-            {{ row.status === 'published' ? '已发布' : '草稿' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="views" label="浏览" width="80" />
-      <el-table-column prop="createTime" label="发布时间" width="160" />
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" type="primary" @click="editAnnounce(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteAnnounce(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
-    <!-- 添加/编辑弹窗 -->
-    <el-dialog v-model="showDialog" :title="isEdit ? '编辑公告' : '发布公告'" width="600px">
-      <el-form :model="form" label-width="100px">
-        <el-form-item label="公告标题" required>
-          <el-input v-model="form.title" placeholder="请输入公告标题" maxlength="50" show-word-limit />
-        </el-form-item>
-        <el-form-item label="公告内容" required>
-          <el-input v-model="form.content" type="textarea" :rows="5" placeholder="请输入公告内容" maxlength="500" show-word-limit />
-        </el-form-item>
-        <el-form-item label="公告类型" required>
-          <el-radio-group v-model="form.type">
-            <el-radio label="system">系统公告</el-radio>
-            <el-radio label="activity">活动公告</el-radio>
-            <el-radio label="maintenance">维护公告</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="发布范围">
-          <el-radio-group v-model="form.scope">
-            <el-radio label="all">全量用户</el-radio>
-            <el-radio label="specific">指定用户</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="推送时间">
-          <el-date-picker
-            v-model="form.publishTime"
-            type="datetime"
-            placeholder="选择发布时间"
-            :disabled-date="disabledDate"
-          />
-          <span class="tip">留空则立即发布</span>
-        </el-form-item>
-      </el-form>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm" @click="openEditModal(item)">编辑</button>
+            <button class="btn btn-sm btn-danger" @click="withdraw(item)" v-if="item.statusText === '已发布'">撤回</button>
+          </div>
+        </div>
+        <div v-if="filteredList.length === 0" style="text-align:center;padding:40px;color:#A898B8;">暂无公告</div>
+      </div>
+    </div>
+
+    <!-- Create/Edit Modal -->
+    <el-dialog v-model="showModal" :title="isEdit ? '编辑公告' : '+ 创建公告'" width="520px">
+      <div class="form-item">
+        <div class="form-label">公告标题</div>
+        <el-input v-model="form.title" placeholder="请输入公告标题" maxlength="50" show-word-limit />
+      </div>
+      <div class="form-item">
+        <div class="form-label">公告内容</div>
+        <el-input v-model="form.content" type="textarea" :rows="4" placeholder="请输入公告内容" maxlength="500" show-word-limit />
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">公告类型</div>
+          <el-select v-model="form.type" style="width:100%;">
+            <el-option label="系统公告" value="system" />
+            <el-option label="活动公告" value="activity" />
+            <el-option label="维护通知" value="maintenance" />
+          </el-select>
+        </div>
+        <div class="form-item">
+          <div class="form-label">发布范围</div>
+          <el-select v-model="form.scope" style="width:100%;">
+            <el-option label="全量推送" value="全量推送" />
+            <el-option label="指定用户" value="指定用户" />
+          </el-select>
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">推送时间</div>
+        <el-date-picker v-model="form.publishTime" type="datetime" placeholder="选择发布时间" style="width:100%;" clearable />
+        <div style="font-size:11px;color:#A898B8;margin-top:4px;">留空则立即发布</div>
+      </div>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
-        <el-button @click="saveDraft">保存草稿</el-button>
-        <el-button type="primary" @click="publish">立即发布</el-button>
+        <button class="btn" @click="showModal = false">取消</button>
+        <button class="btn" @click="saveDraft">保存草稿</button>
+        <button class="btn btn-primary" @click="publish">立即发布</button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { announcementAdmin } from '@/api/index.js'
 
 const typeFilter = ref('')
-const showDialog = ref(false)
+const showModal = ref(false)
 const isEdit = ref(false)
-const selected = ref(null)
+const currentItem = ref(null)
 
 const form = ref({
   title: '',
   content: '',
   type: 'system',
-  scope: 'all',
+  scope: '全量推送',
   publishTime: null
 })
 
-const announcements = ref([
-  { id: 1, title: '【活动】周末登录送好礼', content: '周末登录游戏即可获得神秘礼包一份！', type: 'activity', scope: 'all', status: 'published', views: 1256, createTime: '2026-04-14 10:00' },
-  { id: 2, title: '系统升级通知', content: '系统将于今晚23:00-24:00进行升级维护。', type: 'maintenance', scope: 'all', status: 'published', views: 2345, createTime: '2026-04-13 15:30' },
-  { id: 3, title: '新功能上线公告', content: 'AI对话功能正式上线，快来和你的宠物聊天吧！', type: 'system', scope: 'all', status: 'published', views: 3456, createTime: '2026-04-12 09:00' },
-  { id: 4, title: '【活动】节日限定皮肤', content: '节日限定皮肤限时上架！', type: 'activity', scope: 'all', status: 'draft', views: 0, createTime: '2026-04-15 11:00' }
-])
+const allAnnouncements = ref([])
 
-const getTypeTag = (type) => ({ system: '', activity: 'warning', maintenance: 'danger' }[type] || '')
-const getTypeName = (type) => ({ system: '系统公告', activity: '活动公告', maintenance: '维护公告' }[type] || type)
+const filteredList = computed(() => {
+  if (!typeFilter.value) return allAnnouncements.value
+  return allAnnouncements.value.filter(a => a.type === typeFilter.value)
+})
 
-const loadData = () => {
-  console.log('Load:', typeFilter.value)
+const getIconForType = (type) => {
+  return { system: '📋', activity: '🎁', maintenance: '⚙️' }[type] || '📋'
 }
 
-const showAddDialog = () => {
+const getIconBgForType = (type) => {
+  return { system: '#D5AAFF', activity: '#FFD166', maintenance: '#A8D8EA' }[type] || '#D5AAFF'
+}
+
+const loadData = async () => {
+  try {
+    const params = {}
+    if (typeFilter.value) params.type = typeFilter.value
+    const res = await announcementAdmin.list(params)
+    if (res.code === 200 && res.data) {
+      allAnnouncements.value = res.data.map(a => ({
+        id: a.id,
+        title: a.title || '',
+        content: a.content || '',
+        type: a.type || 'system',
+        icon: getIconForType(a.type),
+        iconBg: getIconBgForType(a.type),
+        scope: a.scope || '全量推送',
+        statusText: a.status === 'published' ? '已发布' : '草稿',
+        statusBadge: a.status === 'published' ? 'badge-green' : 'badge-yellow',
+        time: a.createTime || ''
+      }))
+    }
+  } catch (e) {
+    console.error('加载公告失败', e)
+  }
+}
+
+const openAddModal = () => {
   isEdit.value = false
-  form.value = { title: '', content: '', type: 'system', scope: 'all', publishTime: null }
-  showDialog.value = true
+  form.value = { title: '', content: '', type: 'system', scope: '全量推送', publishTime: null }
+  showModal.value = true
 }
 
-const editAnnounce = (row) => {
+const openEditModal = (item) => {
   isEdit.value = true
-  selected.value = row
-  form.value = { ...row }
-  showDialog.value = true
+  currentItem.value = item
+  form.value = { title: item.title, content: item.content, type: item.type, scope: item.scope, publishTime: null }
+  showModal.value = true
 }
 
-const saveDraft = () => {
-  if (!validateForm()) return
-  ElMessage.success('草稿已保存')
-  showDialog.value = false
-}
-
-const publish = () => {
-  if (!validateForm()) return
-  ElMessage.success('公告已发布')
-  showDialog.value = false
-  loadData()
-}
-
-const deleteAnnounce = (row) => {
-  ElMessageBox.confirm(`确定要删除公告"${row.title}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('公告已删除')
-    loadData()
-  })
-}
-
-const validateForm = () => {
-  if (!form.value.title) {
-    ElMessage.warning('请输入公告标题')
-    return false
+const saveDraft = async () => {
+  if (!form.value.title) { ElMessage.warning('请输入公告标题'); return }
+  if (!form.value.content) { ElMessage.warning('请输入公告内容'); return }
+  try {
+    const data = { title: form.value.title, content: form.value.content, type: form.value.type, scope: form.value.scope }
+    let res
+    if (isEdit.value) {
+      res = await announcementAdmin.update(currentItem.value.id, data)
+    } else {
+      res = await announcementAdmin.create(data)
+    }
+    if (res.code === 200) {
+      ElMessage.success('草稿已保存')
+      showModal.value = false
+      loadData()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
   }
-  if (!form.value.content) {
-    ElMessage.warning('请输入公告内容')
-    return false
-  }
-  return true
 }
 
-const disabledDate = (time) => {
-  return time.getTime() < Date.now() - 8.64e7
+const publish = async () => {
+  if (!form.value.title) { ElMessage.warning('请输入公告标题'); return }
+  if (!form.value.content) { ElMessage.warning('请输入公告内容'); return }
+  try {
+    let res
+    if (isEdit.value) {
+      res = await announcementAdmin.update(currentItem.value.id, { ...form.value, status: 'published' })
+      res = await announcementAdmin.publish(currentItem.value.id)
+    } else {
+      res = await announcementAdmin.create({ ...form.value, status: 'published' })
+    }
+    if (res.code === 200) {
+      ElMessage.success('公告已发布')
+      showModal.value = false
+      loadData()
+    } else {
+      ElMessage.error(res.message || '发布失败')
+    }
+  } catch (e) {
+    ElMessage.error('发布失败')
+  }
+}
+
+const withdraw = async (item) => {
+  try {
+    await ElMessageBox.confirm(`确定要撤回公告「${item.title}」吗？`, '提示')
+    const res = await announcementAdmin.withdraw(item.id)
+    if (res.code === 200) {
+      ElMessage.success('公告已撤回')
+      loadData()
+    } else {
+      ElMessage.error(res.message || '撤回失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('撤回失败')
+  }
 }
 
 onMounted(() => {
@@ -178,36 +212,29 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.announcements-page { padding: 0; }
+.admin-page { display: block; }
 
-.toolbar {
+.announce-item {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #FAFAFA;
+  border-radius: 14px;
 }
 
-.table { background: white; border-radius: 8px; }
-
-.announce-cell { text-align: left; }
-
-.announce-title {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  font-weight: 600;
+.announce-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
-.announce-content {
-  margin: 0;
-  font-size: 12px;
-  color: #7A6B8A;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tip {
-  margin-left: 12px;
-  font-size: 12px;
-  color: #A898B8;
-}
+.announce-body { flex: 1; }
+.announce-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.announce-meta { font-size: 12px; color: #7A6B8A; display: flex; align-items: center; gap: 6px; }
 </style>

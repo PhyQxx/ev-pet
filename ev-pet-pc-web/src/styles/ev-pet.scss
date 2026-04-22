@@ -1,0 +1,109 @@
+// ============================================================
+// EV Pet Design System — 基于原型 evpet-web-*.html
+// ============================================================
+
+// ── 品牌色 ──────────────────────────────────────────────────
+$ev-primary:       #FFB3C6;   // 粉 (primary)
+$ev-primary-dark:   #FF8FAB;   // 深粉
+$ev-primary-light:  #FFD5E5;   // 浅粉
+$ev-secondary:      #A8D8EA;   // 浅蓝
+$ev-secondary-dark: #7EC8D8;   // 深蓝
+$ev-yellow:         #FFE5A0;   // 黄
+$ev-yellow-dark:    #FFD166;   // 深黄
+$ev-purple:         #D5AAFF;   // 紫
+$ev-purple-light:   #EDE4FF;   // 浅紫
+$ev-green:          #B8F1CC;   // 绿
+$ev-coral:          #FFACA8;   // 珊瑚红
+
+// ── 背景 & 边框 ────────────────────────────────────────────
+$ev-bg:           #F5EEF8;   // 卡片/组件背景
+$ev-bg-page:      #EEE8F5;   // 页面背景
+$ev-bg-sidebar:   #F0EBF8;   // 侧边栏背景
+$ev-border:       #E8E0F0;   // 边框色
+
+// ── 文字 ────────────────────────────────────────────────────
+$ev-text:         #4A3F55;   // 主文字
+$ev-text-sec:     #7A6B8A;   // 次级文字
+$ev-text-muted:   #A898B8;   // 占位/弱化文字
+
+// ── 圆角 ────────────────────────────────────────────────────
+$ev-radius:       16px;      // 大圆角 (卡片)
+$ev-radius-sm:    10px;      // 小圆角 (按钮/输入框)
+$ev-radius-full:  999px;     // 全圆 (pill标签)
+
+// ── 阴影 ────────────────────────────────────────────────────
+$ev-shadow:       0 2px 12px rgba(80,60,100,0.06);
+$ev-shadow-lg:    0 4px 20px rgba(80,60,100,0.10);
+
+// ── 渐变 ────────────────────────────────────────────────────
+$ev-gradient-primary:  linear-gradient(135deg, $ev-primary, $ev-purple);
+$ev-gradient-sidebar:  linear-gradient(180deg, $ev-primary 0%, $ev-purple 100%);
+$ev-gradient-banner:   linear-gradient(135deg, $ev-primary 0%, $ev-purple 100%);
+$ev-gradient-health:   linear-gradient(90deg, $ev-secondary, $ev-secondary-dark);
+$ev-gradient-fullness: linear-gradient(90deg, $ev-yellow, $ev-yellow-dark);
+$ev-gradient-mood:     linear-gradient(90deg, $ev-primary, $ev-primary-dark);
+
+// ── 间距 ────────────────────────────────────────────────────
+$ev-space-xs:  4px;
+$ev-space-sm:  8px;
+$ev-space-md:  12px;
+$ev-space-lg:  16px;
+$ev-space-xl:  24px;
+$ev-space-2xl: 32px;
+
+// ── 字体 ────────────────────────────────────────────────────
+$ev-font: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+$ev-font-size-xs:   11px;
+$ev-font-size-sm:   12px;
+$ev-font-size-base: 14px;
+$ev-font-size-md:   16px;
+$ev-font-size-lg:   20px;
+$ev-font-size-xl:   24px;
+$ev-font-size-2xl:  28px;
+
+// ── 侧边栏 ───────────────────────────────────────────────────
+$ev-sidebar-width: 220px;
+
+// ── 工具 mixin ───────────────────────────────────────────────
+@mixin ev-card {
+  background: white;
+  border-radius: $ev-radius;
+  padding: $ev-space-xl;
+  box-shadow: $ev-shadow;
+}
+
+@mixin ev-btn-primary {
+  background: $ev-gradient-primary;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 12px rgba($ev-primary, 0.35);
+  transition: all 150ms;
+
+  &:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+@mixin ev-btn-secondary {
+  background: white;
+  color: $ev-text-sec;
+  border: 1px solid $ev-border;
+  box-shadow: $ev-shadow;
+
+  &:hover {
+    background: $ev-primary-light;
+    color: $ev-primary-dark;
+  }
+}
+
+@mixin ev-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: $ev-radius-sm;
+  cursor: pointer;
+  transition: all 150ms;
+  font-family: inherit;
+}

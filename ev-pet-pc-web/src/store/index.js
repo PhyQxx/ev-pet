@@ -1,9 +1,15 @@
 import { defineStore } from 'pinia'
 
+// 安全解析 localStorage JSON，避免 "undefined" 字符串导致 JSON.parse 报错
+const safeParse = (str, fallback) => {
+  if (!str || str === 'undefined' || str === 'null') return fallback
+  try { return JSON.parse(str) } catch { return fallback }
+}
+
 export const useUserStore = defineStore('user', {
   state: () => ({
-    userInfo: JSON.parse(localStorage.getItem('userInfo') || 'null'),
-    petInfo: JSON.parse(localStorage.getItem('petInfo') || 'null'),
+    userInfo: safeParse(localStorage.getItem('userInfo'), null),
+    petInfo: safeParse(localStorage.getItem('petInfo'), null),
     token: localStorage.getItem('token') || ''
   }),
   actions: {

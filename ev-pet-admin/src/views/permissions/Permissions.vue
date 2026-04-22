@@ -1,160 +1,151 @@
 <template>
-  <div class="permissions-page">
-    <el-row :gutter="24">
-      <el-col :span="12">
-        <div class="card">
-          <div class="card-header">
-            <h3>管理员账号</h3>
-            <el-button type="primary" size="small" @click="showAddDialog">添加管理员</el-button>
+  <div class="admin-page">
+    <div class="page-title">⚙️ 账号权限</div>
+    <div class="page-sub">权限管理、角色配置、系统参数</div>
+
+    <!-- Admin Accounts Card -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">👥 管理员账号</div>
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div v-for="admin in admins" :key="admin.id" class="admin-item">
+          <div class="admin-avatar" :style="{ background: admin.avatarBg }">{{ admin.avatarEmoji }}</div>
+          <div class="admin-info">
+            <div class="admin-name">{{ admin.name }}</div>
+            <div class="admin-meta">{{ admin.role }} · 上次登录：{{ admin.lastLogin }}</div>
           </div>
-          
-          <el-table :data="admins" stripe>
-            <el-table-column prop="username" label="用户名" />
-            <el-table-column prop="role" label="角色" width="120">
-              <template #default="{ row }">
-                <el-tag size="small">{{ row.role }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="lastLogin" label="最后登录" width="160" />
-            <el-table-column label="状态" width="80">
-              <template #default="{ row }">
-                <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="toggleStatus(row)" />
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="150">
-              <template #default="{ row }">
-                <el-button size="small" type="primary" @click="editAdmin(row)">编辑</el-button>
-                <el-button size="small" type="danger" @click="deleteAdmin(row)" :disabled="row.isSuper">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-col>
-      
-      <el-col :span="12">
-        <div class="card">
-          <div class="card-header">
-            <h3>角色权限</h3>
-            <el-button type="primary" size="small" @click="showRoleDialog">编辑角色</el-button>
+          <span :class="['badge', admin.roleBadge]">{{ admin.roleName }}</span>
+          <div style="display:flex;gap:6px;margin-left:12px;">
+            <button class="btn btn-sm" @click="openEditAdmin(admin)">编辑</button>
+            <button class="btn btn-sm btn-danger" @click="deleteAdmin(admin)" v-if="!admin.isSuper">删除</button>
           </div>
-          
-          <el-table :data="roles" stripe>
-            <el-table-column prop="name" label="角色名称" width="120" />
-            <el-table-column prop="description" label="描述" />
-            <el-table-column prop="userCount" label="成员数" width="80" />
-            <el-table-column label="权限" width="200">
-              <template #default="{ row }">
-                <el-tag v-for="perm in row.permissions.slice(0, 3)" :key="perm" size="small" style="margin-right: 4px">{{ perm }}</el-tag>
-                <el-tag v-if="row.permissions.length > 3" size="small">+{{ row.permissions.length - 3 }}</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
         </div>
-      </el-col>
-    </el-row>
-    
-    <el-row :gutter="24" class="mt-6">
-      <el-col :span="24">
-        <div class="card">
-          <div class="card-header">
-            <h3>操作日志</h3>
-            <el-select v-model="logFilter" placeholder="筛选类型" style="width: 150px">
-              <el-option label="全部" value="" />
-              <el-option label="用户管理" value="user" />
-              <el-option label="商品管理" value="item" />
-              <el-option label="系统配置" value="system" />
-            </el-select>
-          </div>
-          
-          <el-table :data="logs" stripe>
-            <el-table-column prop="time" label="时间" width="180" />
-            <el-table-column prop="operator" label="操作人" width="120" />
-            <el-table-column prop="type" label="类型" width="120">
-              <template #default="{ row }">
-                <el-tag size="small">{{ getLogTypeName(row.type) }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="content" label="操作内容" />
-            <el-table-column prop="ip" label="IP地址" width="140" />
-          </el-table>
-          
-          <el-pagination
-            class="pagination"
-            background
-            layout="prev, pager, next, total"
-            :total="logTotal"
-            :page-size="logPageSize"
-            v-model:current-page="logPage"
-          />
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px;" @click="openAddAdmin">+ 添加管理员</button>
+    </div>
+
+    <!-- Role Permissions Card -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">🔐 角色权限</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>角色名称</th>
+              <th>描述</th>
+              <th>成员数</th>
+              <th>权限</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="role in roles" :key="role.name">
+              <td><span class="badge badge-purple">{{ role.name }}</span></td>
+              <td>{{ role.desc }}</td>
+              <td>{{ role.userCount }}</td>
+              <td>
+                <span v-for="perm in role.permissions.slice(0, 3)" :key="perm" class="badge badge-blue" style="margin-right:4px;">{{ perm }}</span>
+                <span v-if="role.permissions.length > 3" class="badge badge-yellow">+{{ role.permissions.length - 3 }}</span>
+              </td>
+              <td>
+                <span class="action-link" @click="openEditRole(role)">编辑</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- System Parameters Card -->
+    <div class="card">
+      <div class="card-title">🔧 系统参数配置</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">单用户最大宠物数</div>
+          <el-input-number v-model="params.maxPets" :min="1" style="margin-top:6px;width:100%;" />
         </div>
-      </el-col>
-    </el-row>
-    
-    <!-- 添加/编辑管理员弹窗 -->
-    <el-dialog v-model="showAdminDialog" :title="isEditAdmin ? '编辑管理员' : '添加管理员'" width="400px">
-      <el-form :model="adminForm" label-width="80px">
-        <el-form-item label="用户名" required>
-          <el-input v-model="adminForm.username" placeholder="请输入用户名" :disabled="isEditAdmin" />
-        </el-form-item>
-        <el-form-item label="密码" v-if="!isEditAdmin" required>
-          <el-input v-model="adminForm.password" type="password" placeholder="请输入密码" show-password />
-        </el-form-item>
-        <el-form-item label="角色" required>
-          <el-select v-model="adminForm.role">
-            <el-option label="超级管理员" value="SUPER_ADMIN" />
-            <el-option label="运营管理员" value="OP_ADMIN" />
-            <el-option label="客服" value="SUPPORT" />
-          </el-select>
-        </el-form-item>
-      </el-form>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">体力上限</div>
+          <el-input-number v-model="params.maxHealth" :min="1" style="margin-top:6px;width:100%;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">AI 对话频率限制（条/分钟）</div>
+          <el-input-number v-model="params.aiLimit" :min="1" style="margin-top:6px;width:100%;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">免费用户每日最大对话数</div>
+          <el-input-number v-model="params.dailyChatLimit" :min="1" style="margin-top:6px;width:100%;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">打工每次消耗体力</div>
+          <el-input-number v-model="params.workHealthCost" :min="0" style="margin-top:6px;width:100%;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">连续登录奖励天数上限</div>
+          <el-input-number v-model="params.maxLoginDays" :min="1" style="margin-top:6px;width:100%;" />
+        </div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:14px;" @click="saveParams">💾 保存参数</button>
+    </div>
+
+    <!-- Add/Edit Admin Modal -->
+    <el-dialog v-model="showAdminModal" :title="isEditAdmin ? '编辑管理员' : '+ 添加管理员'" width="420px">
+      <div class="form-item">
+        <div class="form-label">用户名</div>
+        <el-input v-model="adminForm.username" placeholder="请输入用户名" :disabled="isEditAdmin" />
+      </div>
+      <div class="form-item" v-if="!isEditAdmin">
+        <div class="form-label">密码</div>
+        <el-input v-model="adminForm.password" type="password" placeholder="请输入密码" show-password />
+      </div>
+      <div class="form-item">
+        <div class="form-label">角色</div>
+        <el-select v-model="adminForm.role" style="width:100%;">
+          <el-option label="超级管理员" value="SUPER_ADMIN" />
+          <el-option label="运营管理员" value="OP_ADMIN" />
+          <el-option label="内容编辑" value="EDITOR" />
+          <el-option label="运维人员" value="OPS" />
+          <el-option label="客服" value="SUPPORT" />
+        </el-select>
+      </div>
       <template #footer>
-        <el-button @click="showAdminDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveAdmin">保存</el-button>
+        <button class="btn" @click="showAdminModal = false">取消</button>
+        <button class="btn btn-primary" @click="saveAdmin">保存</button>
       </template>
     </el-dialog>
-    
-    <!-- 编辑角色权限弹窗 -->
-    <el-dialog v-model="showRoleDialog" title="编辑角色权限" width="500px">
-      <el-form :model="roleForm" label-width="100px">
-        <el-form-item label="角色名称">
-          <el-input v-model="roleForm.name" />
-        </el-form-item>
-        <el-form-item label="角色描述">
-          <el-input v-model="roleForm.description" />
-        </el-form-item>
-        <el-form-item label="权限配置">
-          <el-checkbox-group v-model="roleForm.permissions">
-            <el-checkbox label="user.view">查看用户</el-checkbox>
-            <el-checkbox label="user.edit">编辑用户</el-checkbox>
-            <el-checkbox label="user.delete">删除用户</el-checkbox>
-            <el-checkbox label="item.view">查看商品</el-checkbox>
-            <el-checkbox label="item.edit">编辑商品</el-checkbox>
-            <el-checkbox label="content.audit">内容审核</el-checkbox>
-            <el-checkbox label="announcement.publish">发布公告</el-checkbox>
-            <el-checkbox label="activity.manage">活动管理</el-checkbox>
-            <el-checkbox label="system.config">系统配置</el-checkbox>
-          </el-checkbox-group>
-        </el-form-item>
-      </el-form>
+
+    <!-- Edit Role Modal -->
+    <el-dialog v-model="showRoleModal" title="编辑角色权限" width="520px">
+      <div class="form-item">
+        <div class="form-label">角色名称</div>
+        <el-input v-model="roleForm.name" disabled />
+      </div>
+      <div class="form-item">
+        <div class="form-label">角色描述</div>
+        <el-input v-model="roleForm.desc" />
+      </div>
+      <div class="form-item">
+        <div class="form-label">权限配置</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <el-checkbox v-for="perm in allPermissions" :key="perm.value" v-model="roleForm.permissions" :label="perm.value">{{ perm.label }}</el-checkbox>
+        </div>
+      </div>
       <template #footer>
-        <el-button @click="showRoleDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveRole">保存</el-button>
+        <button class="btn" @click="showRoleModal = false">取消</button>
+        <button class="btn btn-primary" @click="saveRole">保存</button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { adminAccount, roleAdmin, systemConfig } from '@/api/index.js'
 
-const logFilter = ref('')
-const logPage = ref(1)
-const logPageSize = ref(20)
-const logTotal = ref(100)
-const showAdminDialog = ref(false)
-const showRoleDialog = ref(false)
+const showAdminModal = ref(false)
+const showRoleModal = ref(false)
 const isEditAdmin = ref(false)
+const currentAdmin = ref(null)
 
 const adminForm = ref({
   username: '',
@@ -164,93 +155,216 @@ const adminForm = ref({
 
 const roleForm = ref({
   name: '',
-  description: '',
+  desc: '',
   permissions: []
 })
 
-const admins = ref([
-  { id: 1, username: 'admin', role: 'SUPER_ADMIN', lastLogin: '2026-04-15 10:30', status: 1, isSuper: true },
-  { id: 2, username: 'operator1', role: 'OP_ADMIN', lastLogin: '2026-04-15 09:20', status: 1, isSuper: false },
-  { id: 3, username: 'support1', role: 'SUPPORT', lastLogin: '2026-04-14 18:45', status: 1, isSuper: false },
-  { id: 4, username: 'operator2', role: 'OP_ADMIN', lastLogin: '2026-04-10 12:00', status: 0, isSuper: false }
-])
+const params = ref({
+  maxPets: 3,
+  maxHealth: 100,
+  aiLimit: 10,
+  dailyChatLimit: 50,
+  workHealthCost: 30,
+  maxLoginDays: 7
+})
 
-const roles = ref([
-  { name: 'SUPER_ADMIN', description: '超级管理员，拥有所有权限', userCount: 1, permissions: ['user.view', 'user.edit', 'user.delete', 'item.view', 'item.edit', 'content.audit', 'announcement.publish', 'activity.manage', 'system.config'] },
-  { name: 'OP_ADMIN', description: '运营管理员，日常运营操作', userCount: 2, permissions: ['user.view', 'item.view', 'item.edit', 'content.audit', 'announcement.publish', 'activity.manage'] },
-  { name: 'SUPPORT', description: '客服，仅查看和基础操作', userCount: 1, permissions: ['user.view', 'content.audit'] }
-])
+const admins = ref([])
+const roles = ref([])
 
-const logs = ref([
-  { time: '2026-04-15 10:30:15', operator: 'admin', type: 'user', content: '编辑用户[小明]信息', ip: '192.168.1.100' },
-  { time: '2026-04-15 10:15:20', operator: 'operator1', type: 'item', content: '添加商品[生日蛋糕]', ip: '192.168.1.101' },
-  { time: '2026-04-15 09:45:30', operator: 'admin', type: 'system', content: '修改系统配置项[max_upload_size]', ip: '192.168.1.100' },
-  { time: '2026-04-15 09:30:00', operator: 'operator1', type: 'content', content: '审核通过动态#1234', ip: '192.168.1.101' },
-  { time: '2026-04-15 09:15:45', operator: 'support1', type: 'user', content: '查看用户[小红]详情', ip: '192.168.1.102' }
-])
+const allPermissions = [
+  { value: 'user.view', label: '查看用户' },
+  { value: 'user.edit', label: '编辑用户' },
+  { value: 'user.delete', label: '删除用户' },
+  { value: 'item.view', label: '查看商品' },
+  { value: 'item.edit', label: '编辑商品' },
+  { value: 'item.delete', label: '删除商品' },
+  { value: 'content.audit', label: '内容审核' },
+  { value: 'announcement.publish', label: '发布公告' },
+  { value: 'activity.manage', label: '活动管理' },
+  { value: 'system.config', label: '系统配置' }
+]
 
-const getLogTypeName = (type) => ({ user: '用户管理', item: '商品管理', content: '内容审核', system: '系统配置' }[type] || type)
+const getRoleBadge = (role) => {
+  return { SUPER_ADMIN: 'badge-green', OP_ADMIN: 'badge-purple', EDITOR: 'badge-purple', OPS: 'badge-blue', SUPPORT: 'badge-blue' }[role] || 'badge-blue'
+}
 
-const showAddDialog = () => {
+const loadAdmins = async () => {
+  try {
+    const res = await adminAccount.list()
+    if (res.code === 200 && res.data) {
+      admins.value = res.data.map(a => ({
+        id: a.id,
+        name: a.name || '',
+        avatarBg: a.avatarBg || '#D5AAFF',
+        avatarEmoji: a.avatarEmoji || '👨‍💻',
+        role: a.role || 'SUPPORT',
+        roleName: a.roleName || a.role,
+        roleBadge: getRoleBadge(a.role),
+        lastLogin: a.lastLogin || '',
+        isSuper: a.isSuper || false
+      }))
+    }
+  } catch (e) {
+    console.error('加载管理员列表失败', e)
+  }
+}
+
+const loadRoles = async () => {
+  try {
+    const res = await roleAdmin.list()
+    if (res.code === 200 && res.data) {
+      roles.value = res.data.map(r => ({
+        id: r.id,
+        name: r.name || '',
+        desc: r.desc || '',
+        userCount: r.userCount || 0,
+        permissions: r.permissions || []
+      }))
+    }
+  } catch (e) {
+    console.error('加载角色列表失败', e)
+  }
+}
+
+const loadParams = async () => {
+  try {
+    const res = await systemConfig.getAll()
+    if (res.code === 200 && res.data) {
+      const p = res.data
+      if (p.maxPets) params.value.maxPets = parseInt(p.maxPets)
+      if (p.maxHealth) params.value.maxHealth = parseInt(p.maxHealth)
+      if (p.aiLimit) params.value.aiLimit = parseInt(p.aiLimit)
+      if (p.dailyChatLimit) params.value.dailyChatLimit = parseInt(p.dailyChatLimit)
+      if (p.workHealthCost) params.value.workHealthCost = parseInt(p.workHealthCost)
+      if (p.maxLoginDays) params.value.maxLoginDays = parseInt(p.maxLoginDays)
+    }
+  } catch (e) {
+    console.error('加载系统参数失败', e)
+  }
+}
+
+const openAddAdmin = () => {
   isEditAdmin.value = false
   adminForm.value = { username: '', password: '', role: 'SUPPORT' }
-  showAdminDialog.value = true
+  showAdminModal.value = true
 }
 
-const editAdmin = (admin) => {
+const openEditAdmin = (admin) => {
   isEditAdmin.value = true
-  adminForm.value = { ...admin }
-  showAdminDialog.value = true
+  currentAdmin.value = admin
+  adminForm.value = { username: admin.name, password: '', role: admin.role }
+  showAdminModal.value = true
 }
 
-const deleteAdmin = (admin) => {
-  ElMessageBox.confirm(`确定要删除管理员"${admin.username}"吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('管理员已删除')
-  })
-}
-
-const toggleStatus = (admin) => {
-  ElMessage.success(`管理员已${admin.status === 1 ? '启用' : '禁用'}`)
-}
-
-const saveAdmin = () => {
-  if (!isEditAdmin.value && !adminForm.value.password) {
-    ElMessage.warning('请输入密码')
-    return
+const saveAdmin = async () => {
+  if (!isEditAdmin.value && !adminForm.value.password) { ElMessage.warning('请输入密码'); return }
+  try {
+    let res
+    if (isEditAdmin.value) {
+      res = await adminAccount.update(currentAdmin.value.id, { role: adminForm.value.role })
+    } else {
+      res = await adminAccount.create(adminForm.value)
+    }
+    if (res.code === 200) {
+      ElMessage.success(isEditAdmin.value ? '管理员已更新' : '管理员已添加')
+      showAdminModal.value = false
+      loadAdmins()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
   }
-  ElMessage.success(isEditAdmin.value ? '管理员已更新' : '管理员已添加')
-  showAdminDialog.value = false
 }
 
-const saveRole = () => {
-  ElMessage.success('角色权限已保存')
-  showRoleDialog.value = false
+const deleteAdmin = async (admin) => {
+  try {
+    await ElMessageBox.confirm(`确定要删除管理员「${admin.name}」吗？`, '提示')
+    const res = await adminAccount.delete(admin.id)
+    if (res.code === 200) {
+      ElMessage.success('管理员已删除')
+      loadAdmins()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('删除失败')
+  }
 }
+
+const openEditRole = (role) => {
+  roleForm.value = { name: role.name, desc: role.desc, permissions: [...role.permissions] }
+  showRoleModal.value = true
+}
+
+const saveRole = async () => {
+  try {
+    const role = roles.value.find(r => r.name === roleForm.value.name)
+    if (!role) return
+    const res = await roleAdmin.update(role.id, { desc: roleForm.value.desc, permissions: roleForm.value.permissions })
+    if (res.code === 200) {
+      ElMessage.success('角色权限已保存')
+      showRoleModal.value = false
+      loadRoles()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+const saveParams = async () => {
+  try {
+    const configMap = {
+      maxPets: String(params.value.maxPets),
+      maxHealth: String(params.value.maxHealth),
+      aiLimit: String(params.value.aiLimit),
+      dailyChatLimit: String(params.value.dailyChatLimit),
+      workHealthCost: String(params.value.workHealthCost),
+      maxLoginDays: String(params.value.maxLoginDays)
+    }
+    const res = await systemConfig.save(configMap)
+    if (res.code === 200) {
+      ElMessage.success('系统参数已保存')
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+onMounted(() => {
+  loadAdmins()
+  loadRoles()
+  loadParams()
+})
 </script>
 
 <style scoped>
-.permissions-page { padding: 0; }
+.admin-page { display: block; }
 
-.mt-6 { margin-top: 24px; }
-
-.card { background: white; border-radius: 8px; padding: 20px; }
-
-.card-header {
+.admin-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #F5EEF8;
 }
+.admin-item:last-child { border-bottom: none; }
 
-.card-header h3 { margin: 0; font-size: 16px; }
-
-.pagination {
-  margin-top: 20px;
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
+
+.admin-info { flex: 1; }
+.admin-name { font-weight: 600; }
+.admin-meta { font-size: 12px; color: #7A6B8A; }
 </style>

@@ -64,4 +64,29 @@ export const shop = {
   use(itemId) { return api.post('/shop/use', { itemId }) }
 }
 
+// 打工
+export const work = {
+  getInfo() { return api.get('/work/info') },
+  start(workId) { return api.post('/work/start', null, { params: { workId } }) },
+  claim(recordId) { return api.post('/work/claim', null, { params: { recordId } }) }
+}
+
+// 社交
+export const social = {
+  getFriends() { return api.get('/social/friends') },
+  getPosts(filter) { return api.get('/social/posts', { params: { filter } }) },
+  getRankings(type) { return api.get('/social/rankings', { params: { type } }) },
+  addFriend(friendId) { return api.post('/social/friend/add', null, { params: { friendId } }) },
+  acceptFriend(requestId) { return api.post('/social/friend/accept', null, { params: { requestId } }) },
+  rejectFriend(requestId) { return api.post('/social/friend/reject', null, { params: { requestId } }) },
+  publishPost(content) { return api.post('/social/post/publish', null, { params: { content } }) },
+  likePost(postId) { return api.post('/social/post/like', null, { params: { postId } }) }
+}
+
+// 成就
+export const achievement = {
+  getList() { return api.get('/achievement/list') },
+  claim(achievementId) { return api.post('/achievement/claim', null, { params: { achievementId } }) }
+}
+
 export default api

@@ -17,6 +17,9 @@ const routes = [
       { path: 'items', name: 'Items', component: () => import('../views/items/Items.vue') },
       { path: 'announcements', name: 'Announcements', component: () => import('../views/announcements/Announcements.vue') },
       { path: 'activities', name: 'Activities', component: () => import('../views/activities/Activities.vue') },
+      { path: 'achievements', name: 'Achievements', component: () => import('../views/achievements/Achievements.vue') },
+      { path: 'report', name: 'Report', component: () => import('../views/report/Report.vue') },
+      { path: 'pets', name: 'Pets', component: () => import('../views/pets/Pets.vue') },
       { path: 'permissions', name: 'Permissions', component: () => import('../views/permissions/Permissions.vue') },
       { path: 'settings', name: 'Settings', component: () => import('../views/settings/Settings.vue') }
     ]

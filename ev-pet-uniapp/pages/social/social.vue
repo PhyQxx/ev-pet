@@ -1,39 +1,39 @@
 <template>
   <view class="page">
-    <!-- 顶部栏 -->
+    <!-- Topbar -->
     <view class="topbar" :style="{ paddingTop: statusBarHeight + 'px' }">
       <view class="topbar-inner">
         <view class="topbar-left">
-          <text class="topbar-title">💕 社交中心</text>
+          <text class="topbar-title">👥 社交中心</text>
           <text class="topbar-sub">探访好友宠物，互赞互动</text>
         </view>
         <view class="gold-chip">
-          <text style="font-size:28rpx;">🪙</text>
+          <text class="gold-icon">🪙</text>
           <text class="gold-num">{{ userInfo?.gold || myGold || 0 }}</text>
         </view>
       </view>
     </view>
 
-    <!-- Tab切换 -->
+    <!-- Tabs -->
     <view class="tabs">
       <view class="tab" :class="{ active: tab === 'friends' }" @click="tab = 'friends'">🐾 好友</view>
       <view class="tab" :class="{ active: tab === 'posts' }" @click="tab = 'posts'">📷 动态</view>
       <view class="tab" :class="{ active: tab === 'ranking' }" @click="tab = 'ranking'">🏆 排行</view>
     </view>
 
-    <!-- 内容区 -->
+    <!-- Content -->
     <view class="content">
 
       <!-- ===== 好友页 ===== -->
       <view v-show="tab === 'friends'" class="tab-content">
         <!-- 邀请横幅 -->
-        <view class="invite-banner">
-          <text style="font-size:80rpx;">🤝</text>
+        <view class="invite-banner" @click="showToast('邀请好友')">
+          <text class="invite-emoji">🤝</text>
           <view class="invite-text">
             <text class="invite-title">邀请好友加入</text>
             <text class="invite-desc">双方各获得限定服装一件</text>
           </view>
-          <view class="invite-btn" @click="showAddFriend">邀请</view>
+          <view class="invite-btn">邀请</view>
         </view>
 
         <!-- 搜索栏 -->
@@ -61,7 +61,7 @@
         </view>
 
         <!-- 好友列表 -->
-        <view class="section-header" style="margin-top:32rpx;">
+        <view class="section-header" style="margin-top: 16px;">
           <text class="section-title">🐾 我的好友 ({{ friends.length }})</text>
         </view>
         <view v-if="friends.length === 0" class="empty-tip">还没有好友，赶快添加吧～</view>
@@ -79,13 +79,12 @@
           </view>
           <view class="pet-pet">{{ f.petEmoji || '🐾' }}</view>
           <view class="pet-actions">
-            <view class="pet-action-btn">👋 打招呼</view>
+            <view class="pet-action-btn" @click="showToast('已打招呼 👋')">👋 打招呼</view>
             <view class="pet-action-btn" :class="{ liked: f.liked }" @click="likeFriend(f)">❤️ {{ f.likes || 0 }}</view>
-            <view class="pet-action-btn">📷 合照</view>
+            <view class="pet-action-btn" @click="showToast('合照 📷')">📷 合照</view>
           </view>
         </view>
 
-        <!-- 添加好友按钮 -->
         <view class="add-friend-btn" @click="showAddFriend">➕ 添加好友</view>
       </view>
 
@@ -94,7 +93,7 @@
         <!-- 发布框 -->
         <view class="post-box" :class="{ expanded: postExpanded }" @click="expandPost">
           <view v-if="!postExpanded" class="post-placeholder">
-            <text style="color:#A898B8;font-size:26rpx;">✨ 点击分享你家宠物的日常...</text>
+            <text style="color: #A898B8; font-size: 13px;">✨ 点击分享你家宠物的日常...</text>
           </view>
           <view v-else class="post-form">
             <textarea class="post-textarea" v-model="postContent" placeholder="分享你家宠物的有趣瞬间..." :adjust-position="true" auto-height />
@@ -109,7 +108,7 @@
         </view>
 
         <!-- 动态列表 -->
-        <view v-if="posts.length === 0" class="empty-tip" style="margin-top:32rpx;">暂无动态，快来发布第一条吧～</view>
+        <view v-if="posts.length === 0" class="empty-tip" style="margin-top: 16px;">暂无动态，快来发布第一条吧～</view>
         <view v-for="p in posts" :key="p.postId" class="photo-card">
           <view class="photo-header">
             <view class="photo-user-avatar">{{ p.avatarEmoji || '🐾' }}</view>
@@ -119,7 +118,7 @@
             </view>
           </view>
           <view class="photo-image">
-            <text style="font-size:120rpx;">{{ p.images || '🐾' }}</text>
+            <text style="font-size: 72px;">{{ p.images || '🐾' }}</text>
           </view>
           <view class="photo-caption">{{ p.content }}</view>
           <view class="photo-reactions">
@@ -129,15 +128,14 @@
             <view class="photo-action-btn" :class="{ liked: p.liked }" @click="toggleLike(p)">
               ❤️ {{ p.liked ? '已赞' : '赞' }}
             </view>
-            <view class="photo-action-btn">💬 评论</view>
-            <view class="photo-action-btn">🔗 分享</view>
+            <view class="photo-action-btn" @click="showToast('评论功能开发中')">💬 评论</view>
+            <view class="photo-action-btn" @click="showToast('分享功能开发中')">🔗 分享</view>
           </view>
         </view>
       </view>
 
       <!-- ===== 排行页 ===== -->
       <view v-show="tab === 'ranking'" class="tab-content">
-        <!-- 子Tab -->
         <view class="rank-tabs">
           <view class="rank-tab" :class="{ active: rankType === 'gold' }" @click="switchRank('gold')">💰 金币</view>
           <view class="rank-tab" :class="{ active: rankType === 'exp' }" @click="switchRank('exp')">⭐ 经验</view>
@@ -153,7 +151,7 @@
               <view class="rank-item-info">
                 <text class="rank-item-name">
                   {{ r.nickname }}
-                  <text style="font-size:22rpx;color:#7A6B8A;">LV.{{ r.level || 1 }}</text>
+                  <text style="font-size: 11px; color: #7A6B8A;">LV.{{ r.level || 1 }}</text>
                 </text>
                 <text class="rank-item-stat">
                   <text v-if="rankType === 'gold'">🪙 {{ formatNum(r.gold) }}</text>
@@ -166,10 +164,9 @@
           </view>
         </view>
 
-        <!-- 我的排名 -->
         <view v-if="myRank && myRank.rank > 3" class="my-rank-bar">
-          <text style="font-size:24rpx;">我的排名：第 {{ myRank.rank }} 名</text>
-          <text style="font-size:22rpx;color:#A898B8;">
+          <text style="font-size: 13px;">我的排名：第 {{ myRank.rank }} 名</text>
+          <text style="font-size: 12px; color: #7A6B8A;">
             <text v-if="rankType === 'gold'">🪙 {{ formatNum(myRank.gold) }}</text>
             <text v-else-if="rankType === 'exp'">⭐ {{ formatNum(myRank.exp) }}</text>
             <text v-else>❤️ {{ formatNum(myRank.heat) }}</text>
@@ -181,240 +178,250 @@
   </view>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue'
 import { social, getUserInfo } from '../../utils/api.js'
 
-export default {
-  data() {
-    return {
-      statusBarHeight: 0,
-      tab: 'friends',
-      userInfo: null,
-      myGold: 0,
+const statusBarHeight = ref(0)
+const tab = ref('friends')
+const userInfo = ref(null)
+const myGold = ref(0)
+const friendSearch = ref('')
 
-      // 好友
-      friends: [],
-      friendRequests: [],
-      friendSearch: '',
+// 好友
+const friends = ref([])
+const friendRequests = ref([])
 
-      // 动态
-      posts: [],
-      postExpanded: false,
-      postContent: '',
+// 动态
+const posts = ref([])
+const postExpanded = ref(false)
+const postContent = ref('')
 
-      // 排行
-      rankType: 'gold',
-      rankings: [],
-      myRank: null
+// 排行
+const rankType = ref('gold')
+const rankings = ref([])
+const myRank = ref(null)
+
+onMounted(() => {
+  const info = uni.getSystemInfoSync()
+  statusBarHeight.value = info.statusBarHeight || 0
+  userInfo.value = getUserInfo()
+  if (userInfo.value) myGold.value = userInfo.value.gold || 0
+  loadAll()
+})
+
+function loadAll() {
+  loadFriends()
+  loadPosts()
+  loadRankings()
+}
+
+// ========== 好友 ==========
+function loadFriends() {
+  social.getFriends().then(data => {
+    friends.value = data.friends || []
+    friendRequests.value = data.requests || []
+  }).catch(() => {
+    friends.value = [
+      { friendId: '1', nickname: '小旺', level: 8, petType: '柯基犬', petEmoji: '🐶', avatarEmoji: '🐶', status: 'happy', likes: 92, liked: false },
+      { friendId: '2', nickname: '小火', level: 15, petType: '赤狐', petEmoji: '🦊', avatarEmoji: '🦊', status: 'working', likes: 45, liked: false },
+      { friendId: '3', nickname: '小绒', level: 5, petType: '垂耳兔', petEmoji: '🐰', avatarEmoji: '🐰', status: 'happy', likes: 128, liked: false }
+    ]
+    friendRequests.value = [
+      { requestId: 'r1', nickname: '小林', message: '想和你的小甜饼成为好友～', avatarEmoji: '🐶' },
+      { requestId: 'r2', nickname: '阿雪', message: '你家宠物好可爱！求加好友～', avatarEmoji: '🦊' }
+    ]
+  })
+}
+
+function acceptFriend(requestId) {
+  social.acceptFriend(requestId).then(() => {
+    uni.showToast({ title: '已接受好友请求', icon: 'success' })
+    loadFriends()
+  }).catch(() => {
+    const req = friendRequests.value.find(r => r.requestId === requestId)
+    if (req) {
+      friendRequests.value = friendRequests.value.filter(r => r.requestId !== requestId)
+      friends.value.push({ friendId: requestId, nickname: req.nickname, level: 1, petEmoji: req.avatarEmoji, avatarEmoji: req.avatarEmoji, status: 'happy', likes: 0, liked: false })
+      uni.showToast({ title: '已接受', icon: 'success' })
     }
-  },
-  onLoad() {
-    const info = uni.getSystemInfoSync()
-    this.statusBarHeight = info.statusBarHeight || 0
-    this.userInfo = getUserInfo()
-    if (this.userInfo) this.myGold = this.userInfo.gold || 0
-  },
-  onShow() {
-    this.loadAll()
-  },
-  methods: {
-    loadAll() {
-      this.loadFriends()
-      this.loadPosts()
-      this.loadRankings()
-    },
+  })
+}
 
-    // ========== 好友 ==========
-    loadFriends() {
-      social.getFriends().then(data => {
-        this.friends = data.friends || []
-        this.friendRequests = data.requests || []
-      }).catch(() => {
-        // 静默失败，使用mock
-        this.friends = [
-          { friendId: '1', nickname: '小旺', level: 8, petType: '柯基犬', petEmoji: '🐶', avatarEmoji: '🐶', status: 'happy', likes: 92 },
-          { friendId: '2', nickname: '小火', level: 15, petType: '赤狐', petEmoji: '🦊', avatarEmoji: '🦊', status: 'working', likes: 45 },
-          { friendId: '3', nickname: '小绒', level: 5, petType: '垂耳兔', petEmoji: '🐰', avatarEmoji: '🐰', status: 'happy', likes: 128 }
-        ]
-        this.friendRequests = [
-          { requestId: 'r1', nickname: '小林', message: '想和你的小甜饼成为好友～', avatarEmoji: '🐶' },
-          { requestId: 'r2', nickname: '阿雪', message: '你家宠物好可爱！求加好友～', avatarEmoji: '🦊' }
-        ]
-      })
-    },
-    acceptFriend(requestId) {
-      social.acceptFriend(requestId).then(() => {
-        uni.showToast({ title: '已接受好友请求', icon: 'success' })
-        this.loadFriends()
-      }).catch(() => {
-        // mock
-        const req = this.friendRequests.find(r => r.requestId === requestId)
-        if (req) {
-          this.friendRequests = this.friendRequests.filter(r => r.requestId !== requestId)
-          this.friends.push({ friendId: requestId, nickname: req.nickname, level: 1, petEmoji: req.avatarEmoji, avatarEmoji: req.avatarEmoji, status: 'happy', likes: 0 })
-          uni.showToast({ title: '已接受', icon: 'success' })
-        }
-      })
-    },
-    rejectFriend(requestId) {
-      social.rejectFriend(requestId).then(() => {
-        uni.showToast({ title: '已拒绝', icon: 'none' })
-        this.loadFriends()
-      }).catch(() => {
-        this.friendRequests = this.friendRequests.filter(r => r.requestId !== requestId)
-        uni.showToast({ title: '已拒绝', icon: 'none' })
-      })
-    },
-    likeFriend(f) {
-      f.liked = !f.liked
-      f.likes = (f.likes || 0) + (f.liked ? 1 : -1)
-    },
-    showAddFriend() {
-      uni.showModal({
-        title: '添加好友',
-        editable: true,
-        placeholderText: '输入好友ID或昵称',
-        success: (res) => {
-          if (res.content && res.content.trim()) {
-            this.addFriendById(res.content.trim())
-          }
-        }
-      })
-    },
-    addFriendById(friendId) {
-      social.addFriend(friendId).then(() => {
-        uni.showToast({ title: '已发送好友请求', icon: 'success' })
-      }).catch(() => {
-        uni.showToast({ title: '请求发送成功', icon: 'success' })
-      })
-    },
-    searchFriend() {
-      if (!this.friendSearch.trim()) return
-      // 简单过滤
-      uni.showToast({ title: '搜索: ' + this.friendSearch, icon: 'none' })
-    },
+function rejectFriend(requestId) {
+  social.rejectFriend(requestId).then(() => {
+    uni.showToast({ title: '已拒绝', icon: 'none' })
+    loadFriends()
+  }).catch(() => {
+    friendRequests.value = friendRequests.value.filter(r => r.requestId !== requestId)
+    uni.showToast({ title: '已拒绝', icon: 'none' })
+  })
+}
 
-    // ========== 动态 ==========
-    loadPosts() {
-      social.getPosts('recent').then(data => {
-        this.posts = data || []
-      }).catch(() => {
-        this.posts = [
-          { postId: 'p1', nickname: '小旺', avatarEmoji: '🐶', content: '小甜饼来我家做客啦！两个小家伙玩得好开心～ 🐱💕🐶', images: '🐶🪑🐱', liked: true, likes: 28, reactions: [{ emoji: '❤️', count: 28 }, { emoji: '😂', count: 5 }, { emoji: '😮', count: 2 }], createdAt: Date.now() - 7200000 },
-          { postId: 'p2', nickname: '小火', avatarEmoji: '🦊', content: '今天进化啦！终于从小狐狸变成大火狐了，谢谢大家的支持～ 🦊🔥✨', images: '🦊✨', liked: false, likes: 156, reactions: [{ emoji: '❤️', count: 156 }, { emoji: '🎉', count: 23 }, { emoji: '😍', count: 18 }], createdAt: Date.now() - 18000000 }
-        ]
-      })
-    },
-    expandPost() {
-      this.postExpanded = true
-    },
-    cancelPost() {
-      this.postExpanded = false
-      this.postContent = ''
-    },
-    publishPost() {
-      if (!this.postContent.trim()) return
-      const content = this.postContent.trim()
-      social.publishPost(content).then(() => {
-        uni.showToast({ title: '发布成功', icon: 'success' })
-        this.postContent = ''
-        this.postExpanded = false
-        this.loadPosts()
-      }).catch(() => {
-        uni.showToast({ title: '发布成功', icon: 'success' })
-        this.postContent = ''
-        this.postExpanded = false
-        this.posts.unshift({
-          postId: 'new_' + Date.now(),
-          nickname: this.userInfo?.nickname || '我',
-          avatarEmoji: '🐾',
-          content,
-          images: '🐾✨',
-          liked: false,
-          likes: 0,
-          reactions: [],
-          createdAt: Date.now()
-        })
-      })
-    },
-    toggleLike(post) {
-      post.liked = !post.liked
-      post.likes = (post.likes || 0) + (post.liked ? 1 : -1)
-      if (!post.liked) {
-        post.reactions = post.reactions.filter(r => r.emoji !== '❤️')
-      } else {
-        const heart = post.reactions.find(r => r.emoji === '❤️')
-        if (heart) heart.count++
-        else post.reactions.unshift({ emoji: '❤️', count: 1 })
+function likeFriend(f) {
+  f.liked = !f.liked
+  f.likes = (f.likes || 0) + (f.liked ? 1 : -1)
+}
+
+function showAddFriend() {
+  uni.showModal({
+    title: '添加好友',
+    editable: true,
+    placeholderText: '输入好友ID或昵称',
+    success: (res) => {
+      if (res.content && res.content.trim()) {
+        addFriendById(res.content.trim())
       }
-      social.likePost(post.postId).catch(() => {})
-    },
-    formatTime(ts) {
-      if (!ts) return ''
-      const diff = Date.now() - ts
-      if (diff < 60000) return '刚刚'
-      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-      return Math.floor(diff / 86400000) + '天前'
-    },
-
-    // ========== 排行 ==========
-    loadRankings() {
-      social.getRankings(this.rankType).then(data => {
-        const list = data.list || []
-        const myId = this.userInfo?.userId
-        list.forEach((r, i) => {
-          r.isMe = r.userId === myId
-        })
-        this.rankings = list
-        this.myRank = data.myRank || null
-      }).catch(() => {
-        this.rankings = [
-          { userId: 'u1', nickname: '小绒', level: 28, gold: 58200, exp: 12000, heat: 3200, petEmoji: '🐰', avatarEmoji: '🐰' },
-          { userId: 'u2', nickname: '小火', level: 22, gold: 43150, exp: 8500, heat: 2800, petEmoji: '🦊', avatarEmoji: '🦊' },
-          { userId: 'u3', nickname: '小甜饼', level: 12, gold: 28640, exp: 4100, heat: 1900, petEmoji: '🐱', avatarEmoji: '🐱' },
-          { userId: 'u4', nickname: '小旺', level: 8, gold: 12380, exp: 2200, heat: 900, petEmoji: '🐶', avatarEmoji: '🐶' },
-          { userId: 'u5', nickname: '小团子', level: 6, gold: 8920, exp: 1500, heat: 600, petEmoji: '🐹', avatarEmoji: '🐹' }
-        ]
-        this.myRank = { rank: 4, gold: 12380, exp: 2200, heat: 900 }
-      })
-    },
-    switchRank(type) {
-      this.rankType = type
-      this.loadRankings()
-    },
-    rankMedal(idx) {
-      if (idx === 0) return 'gold'
-      if (idx === 1) return 'silver'
-      if (idx === 2) return 'bronze'
-      return ''
-    },
-    rankMedalEmoji(idx) {
-      if (idx === 0) return '🥇'
-      if (idx === 1) return '🥈'
-      if (idx === 2) return '🥉'
-      return String(idx + 1)
-    },
-    formatNum(n) {
-      if (!n && n !== 0) return '0'
-      if (n >= 10000) return (n / 10000).toFixed(1) + 'w'
-      return String(n)
-    },
-
-    // ========== 工具 ==========
-    statusClass(status) {
-      if (status === 'happy') return 'badge-happy'
-      if (status === 'working') return 'badge-working'
-      if (status === 'sleeping') return 'badge-sleeping'
-      return 'badge-happy'
-    },
-    statusText(status) {
-      if (status === 'happy') return '😊 开心'
-      if (status === 'working') return '🔥 打工中'
-      if (status === 'sleeping') return '💤 休息中'
-      return '😊 开心'
     }
+  })
+}
+
+function addFriendById(friendId) {
+  social.addFriend(friendId).then(() => {
+    uni.showToast({ title: '已发送好友请求', icon: 'success' })
+  }).catch(() => {
+    uni.showToast({ title: '请求发送成功', icon: 'success' })
+  })
+}
+
+function searchFriend() {
+  if (!friendSearch.value.trim()) return
+  uni.showToast({ title: '搜索: ' + friendSearch.value, icon: 'none' })
+}
+
+// ========== 动态 ==========
+function loadPosts() {
+  social.getPosts('recent').then(data => {
+    posts.value = data || []
+  }).catch(() => {
+    posts.value = [
+      { postId: 'p1', nickname: '小旺', avatarEmoji: '🐶', content: '小甜饼来我家做客啦！两个小家伙玩得好开心～ 🐱💕🐶', images: '🐶🪑🐱', liked: true, likes: 28, reactions: [{ emoji: '❤️', count: 28 }, { emoji: '😂', count: 5 }, { emoji: '😮', count: 2 }], createdAt: Date.now() - 7200000 },
+      { postId: 'p2', nickname: '小火', avatarEmoji: '🦊', content: '今天进化啦！终于从小狐狸变成大火狐了，谢谢大家的支持～ 🦊🔥✨', images: '🦊✨', liked: false, likes: 156, reactions: [{ emoji: '❤️', count: 156 }, { emoji: '🎉', count: 23 }, { emoji: '😍', count: 18 }], createdAt: Date.now() - 18000000 }
+    ]
+  })
+}
+
+function expandPost() {
+  postExpanded.value = true
+}
+
+function cancelPost() {
+  postExpanded.value = false
+  postContent.value = ''
+}
+
+function publishPost() {
+  if (!postContent.value.trim()) return
+  const content = postContent.value.trim()
+  social.publishPost(content).then(() => {
+    uni.showToast({ title: '发布成功', icon: 'success' })
+    postContent.value = ''
+    postExpanded.value = false
+    loadPosts()
+  }).catch(() => {
+    uni.showToast({ title: '发布成功', icon: 'success' })
+    postContent.value = ''
+    postExpanded.value = false
+    posts.value.unshift({
+      postId: 'new_' + Date.now(),
+      nickname: userInfo.value?.nickname || '我',
+      avatarEmoji: '🐾',
+      content,
+      images: '🐾✨',
+      liked: false,
+      likes: 0,
+      reactions: [],
+      createdAt: Date.now()
+    })
+  })
+}
+
+function toggleLike(post) {
+  post.liked = !post.liked
+  post.likes = (post.likes || 0) + (post.liked ? 1 : -1)
+  if (!post.liked) {
+    post.reactions = post.reactions.filter(r => r.emoji !== '❤️')
+  } else {
+    const heart = post.reactions.find(r => r.emoji === '❤️')
+    if (heart) heart.count++
+    else post.reactions.unshift({ emoji: '❤️', count: 1 })
   }
+  social.likePost(post.postId).catch(() => {})
+}
+
+function formatTime(ts) {
+  if (!ts) return ''
+  const diff = Date.now() - ts
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+  return Math.floor(diff / 86400000) + '天前'
+}
+
+// ========== 排行 ==========
+function loadRankings() {
+  social.getRankings(rankType.value).then(data => {
+    const list = data.list || []
+    const myId = userInfo.value?.userId
+    list.forEach((r, i) => {
+      r.isMe = r.userId === myId
+    })
+    rankings.value = list
+    myRank.value = data.myRank || null
+  }).catch(() => {
+    rankings.value = [
+      { userId: 'u1', nickname: '小绒', level: 28, gold: 58200, exp: 12000, heat: 3200, petEmoji: '🐰', avatarEmoji: '🐰' },
+      { userId: 'u2', nickname: '小火', level: 22, gold: 43150, exp: 8500, heat: 2800, petEmoji: '🦊', avatarEmoji: '🦊' },
+      { userId: 'u3', nickname: '小甜饼', level: 12, gold: 28640, exp: 4100, heat: 1900, petEmoji: '🐱', avatarEmoji: '🐱' },
+      { userId: 'u4', nickname: '小旺', level: 8, gold: 12380, exp: 2200, heat: 900, petEmoji: '🐶', avatarEmoji: '🐶' },
+      { userId: 'u5', nickname: '小团子', level: 6, gold: 8920, exp: 1500, heat: 600, petEmoji: '🐹', avatarEmoji: '🐹' }
+    ]
+    myRank.value = { rank: 4, gold: 12380, exp: 2200, heat: 900 }
+  })
+}
+
+function switchRank(type) {
+  rankType.value = type
+  loadRankings()
+}
+
+function rankMedal(idx) {
+  if (idx === 0) return 'gold'
+  if (idx === 1) return 'silver'
+  if (idx === 2) return 'bronze'
+  return ''
+}
+
+function rankMedalEmoji(idx) {
+  if (idx === 0) return '🥇'
+  if (idx === 1) return '🥈'
+  if (idx === 2) return '🥉'
+  return String(idx + 1)
+}
+
+function formatNum(n) {
+  if (!n && n !== 0) return '0'
+  if (n >= 10000) return (n / 10000).toFixed(1) + 'w'
+  return String(n)
+}
+
+// ========== 工具 ==========
+function showToast(title) {
+  uni.showToast({ title, icon: 'none' })
+}
+
+function statusClass(status) {
+  if (status === 'happy') return 'badge-happy'
+  if (status === 'working') return 'badge-working'
+  if (status === 'sleeping') return 'badge-sleeping'
+  return 'badge-happy'
+}
+
+function statusText(status) {
+  if (status === 'happy') return '😊 开心'
+  if (status === 'working') return '🔥 打工中'
+  if (status === 'sleeping') return '💤 休息中'
+  return '😊 开心'
 }
 </script>
 
@@ -422,13 +429,15 @@ export default {
 .page {
   min-height: 100vh;
   background: #FFF9FB;
+  max-width: 430px;
+  margin: 0 auto;
   padding-bottom: 72px;
 }
 
 /* Topbar */
 .topbar {
   background: linear-gradient(135deg, #FFB3C6, #D5AAFF);
-  padding: 16rpx 32rpx 20rpx;
+  padding: 12px 16px 14px;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -439,67 +448,62 @@ export default {
   justify-content: space-between;
 }
 .topbar-title {
-  font-size: 36rpx;
+  font-size: 18px;
   font-weight: 700;
   color: #fff;
   display: block;
 }
 .topbar-sub {
-  font-size: 22rpx;
+  font-size: 11px;
   color: rgba(255,255,255,0.8);
   display: block;
-  margin-top: 2rpx;
+  margin-top: 2px;
 }
 .gold-chip {
   display: flex;
   align-items: center;
-  gap: 6rpx;
+  gap: 5px;
   background: rgba(255,255,255,0.9);
-  padding: 12rpx 20rpx;
-  border-radius: 999rpx;
+  padding: 7px 14px;
+  border-radius: 999px;
 }
-.gold-num {
-  font-size: 26rpx;
-  font-weight: 700;
-  color: #4A3F55;
-}
+.gold-icon { font-size: 14px; }
+.gold-num { font-size: 13px; font-weight: 700; color: #4A3F55; }
 
 /* Tabs */
 .tabs {
   display: flex;
-  gap: 8rpx;
-  padding: 20rpx 32rpx 0;
+  gap: 6px;
+  padding: 14px 16px 0;
   background: #FFF9FB;
   position: sticky;
-  top: 100rpx;
+  top: 86px;
   z-index: 40;
 }
 .tab {
   flex: 1;
   text-align: center;
-  padding: 14rpx;
-  border-radius: 20rpx;
-  font-size: 28rpx;
+  padding: 9px;
+  border-radius: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #7A6B8A;
   background: #fff;
   border: none;
   transition: all 0.2s;
 }
-.tab.active {
-  background: #D5AAFF;
-  color: #fff;
-}
+.tab.active { background: #D5AAFF; color: #fff; }
 
 /* Content */
 .content {
-  padding: 24rpx 32rpx;
+  padding: 16px;
 }
 .tab-content {
   animation: fadeIn 0.2s ease;
 }
+
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8rpx); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -507,370 +511,269 @@ export default {
 .empty-tip {
   text-align: center;
   color: #A898B8;
-  font-size: 26rpx;
-  padding: 32rpx 0;
+  font-size: 13px;
+  padding: 20px 0;
 }
 
 /* Invite Banner */
 .invite-banner {
   background: linear-gradient(135deg, #FFE5A0, #FFD5E5);
-  border-radius: 28rpx;
-  padding: 32rpx;
+  border-radius: 18px;
+  padding: 16px;
   display: flex;
   align-items: center;
-  gap: 20rpx;
-  margin-bottom: 24rpx;
+  gap: 14px;
+  margin-bottom: 14px;
 }
-.invite-text {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.invite-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #4A3F55;
-}
-.invite-desc {
-  font-size: 22rpx;
-  color: #7A6B8A;
-  margin-top: 4rpx;
-}
+.invite-emoji { font-size: 38px; flex-shrink: 0; }
+.invite-text { flex: 1; display: flex; flex-direction: column; }
+.invite-title { font-size: 14px; font-weight: 700; color: #4A3F55; }
+.invite-desc { font-size: 11px; color: #7A6B8A; margin-top: 2px; }
 .invite-btn {
   background: #4A3F55;
   color: #fff;
-  padding: 16rpx 24rpx;
-  border-radius: 20rpx;
-  font-size: 26rpx;
+  padding: 9px 16px;
+  border-radius: 14px;
+  font-size: 12px;
   font-weight: 700;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 /* Search */
 .search-bar {
   display: flex;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 .search-input {
   flex: 1;
-  padding: 16rpx 20rpx;
-  border-radius: 20rpx;
-  border: 2rpx solid #EDE4FF;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid #EDE4FF;
   background: #fff;
-  font-size: 26rpx;
+  font-size: 13px;
   color: #4A3F55;
   font-family: inherit;
 }
-.search-input:focus {
-  outline: none;
-  border-color: #D5AAFF;
-}
+.search-input:focus { outline: none; border-color: #D5AAFF; }
 .search-btn {
-  padding: 16rpx 24rpx;
-  border-radius: 20rpx;
+  padding: 10px 14px;
+  border-radius: 14px;
   background: #D5AAFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28rpx;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 /* Section Header */
 .section-header {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 16rpx;
+  gap: 8px;
+  margin-bottom: 10px;
 }
-.section-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #4A3F55;
-}
+.section-title { font-size: 14px; font-weight: 700; color: #4A3F55; }
 .badge {
   background: #FFB3C6;
   color: #fff;
-  font-size: 20rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 20rpx;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
   font-weight: 600;
 }
 
 /* Friend Request Card */
 .friend-req-card {
   background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 16rpx;
-  box-shadow: 0 4rpx 20rpx rgba(180,150,200,0.1);
-  border: 2rpx solid #F5EEF8;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(180,150,200,0.08);
+  border: 1px solid #F5EEF8;
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12px;
 }
 .req-avatar {
-  width: 88rpx;
-  height: 88rpx;
+  width: 44px;
+  height: 44px;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44rpx;
+  font-size: 22px;
   flex-shrink: 0;
 }
-.req-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.req-name {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #4A3F55;
-}
-.req-desc {
-  font-size: 22rpx;
-  color: #7A6B8A;
-  margin-top: 4rpx;
-}
-.req-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
+.req-info { flex: 1; display: flex; flex-direction: column; }
+.req-name { font-size: 14px; font-weight: 700; color: #4A3F55; }
+.req-desc { font-size: 11px; color: #7A6B8A; margin-top: 2px; }
+.req-actions { display: flex; flex-direction: column; gap: 5px; }
 .btn-accept {
-  padding: 12rpx 24rpx;
-  border-radius: 16rpx;
+  padding: 7px 14px;
+  border-radius: 10px;
   background: #B8F1CC;
   color: #2D8A4E;
-  font-size: 24rpx;
+  font-size: 12px;
   font-weight: 700;
   text-align: center;
+  cursor: pointer;
 }
 .btn-decline {
-  padding: 12rpx 24rpx;
-  border-radius: 16rpx;
+  padding: 7px 14px;
+  border-radius: 10px;
   background: #FFF0F0;
   color: #FF6B6B;
-  font-size: 24rpx;
+  font-size: 12px;
   font-weight: 700;
-  border: 2rpx solid #FFE5E5;
+  border: 1px solid #FFE5E5;
   text-align: center;
+  cursor: pointer;
 }
 
 /* Pet Card */
 .pet-card {
   background: #fff;
-  border-radius: 28rpx;
-  padding: 24rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(180,150,200,0.08);
-  border: 2rpx solid #F5EEF8;
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 10px rgba(180,150,200,0.08);
+  border: 1px solid #F5EEF8;
 }
-.pet-card-header {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
-}
+.pet-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 .pet-avatar {
-  width: 88rpx;
-  height: 88rpx;
+  width: 48px;
+  height: 48px;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 44rpx;
+  font-size: 24px;
   flex-shrink: 0;
 }
-.pet-meta {
-  flex: 1;
-}
-.pet-name-row {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-bottom: 4rpx;
-}
-.pet-name-text {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #4A3F55;
-}
-.pet-level {
-  font-size: 20rpx;
-  background: #F9F5FF;
-  color: #D5AAFF;
-  padding: 4rpx 12rpx;
-  border-radius: 16rpx;
-  font-weight: 600;
-}
-.pet-type {
-  font-size: 22rpx;
-  color: #7A6B8A;
-}
-.pet-status-badge {
-  font-size: 20rpx;
-  padding: 6rpx 14rpx;
-  border-radius: 16rpx;
-  font-weight: 600;
-}
+.pet-meta { flex: 1; }
+.pet-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.pet-name-text { font-size: 15px; font-weight: 700; color: #4A3F55; }
+.pet-level { font-size: 10px; background: #F9F5FF; color: #D5AAFF; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+.pet-type { font-size: 11px; color: #7A6B8A; }
+.pet-status-badge { font-size: 10px; padding: 3px 9px; border-radius: 10px; font-weight: 600; }
 .badge-happy { background: #F0FFF5; color: #3BAF5D; }
 .badge-working { background: #FFF4C2; color: #8B6914; }
 .badge-sleeping { background: #F0F4F8; color: #7A9AB0; }
-.pet-pet {
-  font-size: 96rpx;
-  text-align: center;
-  padding: 16rpx 0;
-}
-.pet-actions {
-  display: flex;
-  gap: 12rpx;
-}
+.pet-pet { font-size: 52px; text-align: center; padding: 8px 0; }
+.pet-actions { display: flex; gap: 8px; }
 .pet-action-btn {
   flex: 1;
-  padding: 14rpx;
-  border-radius: 18rpx;
-  font-size: 24rpx;
+  padding: 8px;
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 600;
   text-align: center;
-  border: 2rpx solid #EDE4FF;
+  border: 1px solid #EDE4FF;
   background: #fff;
   color: #7A6B8A;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.pet-action-btn.liked {
-  background: #FFF0F5;
-  color: #FF6B6B;
-  border-color: #FFD5E5;
-}
+.pet-action-btn.liked { background: #FFF0F5; color: #FF6B6B; border-color: #FFD5E5; }
 
 /* Add Friend Button */
 .add-friend-btn {
   text-align: center;
   background: linear-gradient(135deg, #FFB3C6, #D5AAFF);
   color: #fff;
-  padding: 24rpx;
-  border-radius: 28rpx;
-  font-size: 30rpx;
+  padding: 14px;
+  border-radius: 18px;
+  font-size: 14px;
   font-weight: 700;
-  margin-top: 8rpx;
+  margin-top: 8px;
+  cursor: pointer;
 }
 
 /* Post Box */
 .post-box {
   background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  margin-bottom: 24rpx;
-  border: 2rpx solid #EDE4FF;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 14px;
+  border: 1px solid #EDE4FF;
   transition: all 0.25s;
 }
-.post-box.expanded {
-  border-color: #D5AAFF;
-  box-shadow: 0 4rpx 24rpx rgba(213,170,255,0.2);
-}
-.post-placeholder {
-  text-align: center;
-  padding: 16rpx;
-}
+.post-box.expanded { border-color: #D5AAFF; box-shadow: 0 2px 14px rgba(213,170,255,0.2); }
+.post-placeholder { text-align: center; padding: 10px; }
 .post-textarea {
   width: 100%;
-  font-size: 28rpx;
+  font-size: 13px;
   color: #4A3F55;
   font-family: inherit;
   border: none;
   resize: none;
-  min-height: 160rpx;
+  min-height: 100px;
   line-height: 1.6;
   background: transparent;
 }
-.post-textarea:focus {
-  outline: none;
-}
-.post-images {
-  display: flex;
-  gap: 12rpx;
-  margin-top: 12rpx;
-  flex-wrap: wrap;
-}
+.post-textarea:focus { outline: none; }
+.post-images { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .post-img-add {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 16rpx;
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
   background: #F9F5FF;
-  border: 2rpx dashed #D5AAFF;
+  border: 1px dashed #D5AAFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
+  font-size: 24px;
   color: #D5AAFF;
 }
-.post-form-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12rpx;
-  margin-top: 16rpx;
-}
+.post-form-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .btn-cancel {
-  padding: 14rpx 32rpx;
-  border-radius: 20rpx;
+  padding: 8px 18px;
+  border-radius: 14px;
   background: #F5EEF8;
   color: #7A6B8A;
-  font-size: 26rpx;
+  font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
 }
 .btn-publish {
-  padding: 14rpx 40rpx;
-  border-radius: 20rpx;
+  padding: 8px 24px;
+  border-radius: 14px;
   background: linear-gradient(135deg, #FFB3C6, #D5AAFF);
   color: #fff;
-  font-size: 26rpx;
+  font-size: 12px;
   font-weight: 700;
+  cursor: pointer;
 }
-.btn-publish.disabled {
-  opacity: 0.5;
-}
+.btn-publish.disabled { opacity: 0.5; }
 
 /* Photo Card */
 .photo-card {
   background: #fff;
-  border-radius: 28rpx;
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(180,150,200,0.08);
-  border: 2rpx solid #F5EEF8;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(180,150,200,0.08);
+  border: 1px solid #F5EEF8;
 }
-.photo-header {
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-  padding: 20rpx 24rpx;
-}
+.photo-header { display: flex; align-items: center; gap: 10px; padding: 14px; }
 .photo-user-avatar {
-  width: 72rpx;
-  height: 72rpx;
+  width: 38px;
+  height: 38px;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36rpx;
+  font-size: 20px;
   flex-shrink: 0;
 }
-.photo-user-name {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #4A3F55;
-  display: block;
-}
-.photo-user-time {
-  font-size: 22rpx;
-  color: #A898B8;
-  display: block;
-  margin-top: 2rpx;
-}
+.photo-user-name { font-size: 14px; font-weight: 700; color: #4A3F55; display: block; }
+.photo-user-time { font-size: 11px; color: #A898B8; display: block; margin-top: 1px; }
 .photo-image {
   width: 100%;
   aspect-ratio: 1;
@@ -878,143 +781,92 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
 }
-.photo-caption {
-  padding: 18rpx 24rpx;
-  font-size: 26rpx;
-  line-height: 1.6;
-  color: #4A3F55;
-}
-.photo-reactions {
-  padding: 0 24rpx 16rpx;
-  display: flex;
-  gap: 10rpx;
-  flex-wrap: wrap;
-}
+.photo-caption { padding: 12px 14px; font-size: 13px; line-height: 1.6; color: #4A3F55; }
+.photo-reactions { padding: 0 14px 10px; display: flex; gap: 6px; flex-wrap: wrap; }
 .reaction-tag {
-  padding: 6rpx 16rpx;
+  padding: 4px 10px;
   background: #F9F5FF;
-  border-radius: 20rpx;
-  font-size: 22rpx;
+  border-radius: 20px;
+  font-size: 11px;
   color: #D5AAFF;
-  border: 2rpx solid #EDE4FF;
+  border: 1px solid #EDE4FF;
   display: flex;
   align-items: center;
-  gap: 4rpx;
+  gap: 3px;
 }
-.photo-actions {
-  display: flex;
-  padding: 14rpx 24rpx;
-  border-top: 2rpx solid #F5EEF8;
-  gap: 24rpx;
-}
+.photo-actions { display: flex; padding: 10px 14px; border-top: 1px solid #F5EEF8; gap: 16px; }
 .photo-action-btn {
   flex: 1;
-  padding: 14rpx;
+  padding: 8px;
   text-align: center;
-  border-radius: 16rpx;
-  font-size: 26rpx;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #7A6B8A;
   background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6rpx;
+  gap: 3px;
   transition: all 0.2s;
+  cursor: pointer;
 }
-.photo-action-btn.liked {
-  color: #FF6B6B;
-}
+.photo-action-btn.liked { color: #FF6B6B; }
 
 /* Rank Tabs */
-.rank-tabs {
-  display: flex;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
-}
+.rank-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
 .rank-tab {
   flex: 1;
   text-align: center;
-  padding: 14rpx;
-  border-radius: 16rpx;
-  font-size: 26rpx;
+  padding: 9px;
+  border-radius: 14px;
+  font-size: 12px;
   font-weight: 600;
   background: #fff;
   color: #7A6B8A;
   border: none;
+  cursor: pointer;
 }
-.rank-tab.active {
-  background: #FFD166;
-  color: #4A3F55;
-}
+.rank-tab.active { background: #FFD166; color: #4A3F55; }
 
 /* Rank Card */
 .rank-card {
   background: #fff;
-  border-radius: 28rpx;
-  padding: 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(180,150,200,0.08);
-  border: 2rpx solid #F5EEF8;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(180,150,200,0.08);
+  border: 1px solid #F5EEF8;
 }
-.rank-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
+.rank-list { display: flex; flex-direction: column; gap: 12px; }
 .rank-item {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-  padding: 12rpx 16rpx;
-  border-radius: 20rpx;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 14px;
   transition: background 0.2s;
 }
-.rank-item.rank-self {
-  background: linear-gradient(135deg, #FFE5F0, #F5EEFF);
-  border: 2rpx solid #D5AAFF;
-}
-.rank-num {
-  width: 48rpx;
-  font-size: 28rpx;
-  font-weight: 700;
-  text-align: center;
-  flex-shrink: 0;
-}
+.rank-item.rank-self { background: linear-gradient(135deg, #FFE5F0, #F5EEFF); border: 1px solid #D5AAFF; }
+.rank-num { width: 28px; font-size: 16px; font-weight: 700; text-align: center; flex-shrink: 0; }
 .rank-num.gold { color: #FFD166; }
 .rank-num.silver { color: #C9D6E0; }
 .rank-num.bronze { color: #D4A87A; }
 .rank-item-avatar {
-  width: 80rpx;
-  height: 80rpx;
+  width: 42px;
+  height: 42px;
   background: linear-gradient(135deg, #FFD5E5, #EDE4FF);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40rpx;
+  font-size: 22px;
   flex-shrink: 0;
 }
-.rank-item-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-.rank-item-name {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #4A3F55;
-  display: block;
-  margin-bottom: 4rpx;
-}
-.rank-item-stat {
-  font-size: 22rpx;
-  color: #7A6B8A;
-}
-.rank-item-pet {
-  font-size: 52rpx;
-}
+.rank-item-info { flex: 1; display: flex; flex-direction: column; }
+.rank-item-name { font-size: 14px; font-weight: 700; color: #4A3F55; display: flex; align-items: center; gap: 5px; }
+.rank-item-stat { font-size: 11px; color: #7A6B8A; margin-top: 1px; }
+.rank-item-pet { font-size: 28px; }
 
 /* My Rank Bar */
 .my-rank-bar {
@@ -1022,10 +874,10 @@ export default {
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(135deg, #FFE5A0, #FFD5E5);
-  border-radius: 20rpx;
-  padding: 20rpx 28rpx;
-  margin-top: 20rpx;
-  font-size: 26rpx;
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: #4A3F55;
 }

@@ -10,9 +10,9 @@
           <el-input v-model="username" placeholder="用户名" size="large" prefix-icon="User" />
         </el-form-item>
         <el-form-item>
-          <el-input v-model="password" type="password" placeholder="密码" size="large" prefix-icon="Lock" />
+          <el-input v-model="password" type="password" placeholder="密码" size="large" prefix-icon="Lock" @keyup.enter="handleLogin" />
         </el-form-item>
-        <el-button type="primary" size="large" class="login-btn" @click="handleLogin">登 录</el-button>
+        <el-button type="primary" size="large" class="login-btn" :loading="loading" @click="handleLogin">登 录</el-button>
       </el-form>
     </div>
   </div>
@@ -22,20 +22,33 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { auth } from '@/api/index.js'
 
 const router = useRouter()
 const username = ref('')
 const password = ref('')
+const loading = ref(false)
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (!username.value || !password.value) {
     ElMessage.warning('请输入用户名和密码')
     return
   }
-  // 简化版登录，实际需要对接后端
-  localStorage.setItem('adminToken', 'demo')
-  ElMessage.success('登录成功')
-  router.push('/dashboard')
+  loading.value = true
+  try {
+    const res = await auth.login({ username: username.value, password: password.value })
+    if (res.code === 0 || res.code === 200) {
+      localStorage.setItem('adminToken', res.data?.token || res.data)
+      ElMessage.success('登录成功')
+      router.push('/dashboard')
+    } else {
+      ElMessage.error(res.message || '登录失败')
+    }
+  } catch (err) {
+    ElMessage.error(err.response?.data?.message || err.message || '登录失败，请检查网络')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

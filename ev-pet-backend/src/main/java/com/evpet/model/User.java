@@ -18,6 +18,7 @@ public class User {
     private Integer gold;            // 金币
     private Integer level;           // 用户等级
     private Integer exp;             // 经验值
+    private Integer status;        // 1=正常, 0=禁用
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 }

@@ -1,180 +1,259 @@
 <template>
-  <div class="items-page">
-    <div class="toolbar">
-      <el-button type="primary" @click="showAddDialog">添加商品</el-button>
-      <div class="filter-area">
-        <el-select placeholder="商品分类" v-model="categoryFilter" @change="loadItems">
-          <el-option label="全部" value="" />
-          <el-option label="食品" value="food" />
-          <el-option label="服装" value="clothing" />
-          <el-option label="配饰" value="accessory" />
-          <el-option label="背景" value="bg" />
-        </el-select>
-      </div>
-    </div>
-    
-    <el-table :data="items" stripe class="items-table">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column label="商品信息" min-width="200">
-        <template #default="{ row }">
-          <div class="item-info-cell">
-            <span class="item-icon">{{ getIcon(row.category) }}</span>
-            <div class="item-detail">
-              <span class="item-name">{{ row.name }}</span>
-              <span class="item-desc">{{ row.description }}</span>
-            </div>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column label="分类" width="100">
-        <template #default="{ row }">
-          <el-tag size="small">{{ getCategoryName(row.category) }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="price" label="金币价格" width="120">
-        <template #default="{ row }">
-          <span class="price">🪙 {{ row.price }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="rmbPrice" label="RMB价格" width="120">
-        <template #default="{ row }">
-          <span v-if="row.rmbPrice > 0">¥{{ row.rmbPrice }}</span>
-          <span v-else class="free-tag">免费</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="效果" width="150">
-        <template #default="{ row }">
-          <span class="effect">{{ row.effect || '-' }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
-          <el-switch v-model="row.status" :active-value="1" :inactive-value="0" @change="toggleStatus(row)" />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" width="150" fixed="right">
-        <template #default="{ row }">
-          <el-button size="small" type="primary" @click="editItem(row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="deleteItem(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    
-    <!-- 添加/编辑商品弹窗 -->
-    <el-dialog v-model="showDialog" :title="isEdit ? '编辑商品' : '添加商品'" width="500px">
-      <el-form :model="itemForm" label-width="100px">
-        <el-form-item label="商品名称">
-          <el-input v-model="itemForm.name" placeholder="请输入商品名称" />
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="itemForm.description" type="textarea" :rows="2" placeholder="请输入描述" />
-        </el-form-item>
-        <el-form-item label="分类">
-          <el-select v-model="itemForm.category">
+  <div class="admin-page">
+    <div class="page-title">🛒 商品管理</div>
+    <div class="page-sub">管理商店道具、服装、礼包的上架与定价</div>
+
+    <!-- Toolbar -->
+    <div class="card" style="margin-bottom:20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;gap:8px;">
+          <el-select v-model="categoryFilter" placeholder="全部分类" style="width:130px;" clearable @change="loadItems">
+            <el-option label="全部分类" value="" />
             <el-option label="食品" value="food" />
             <el-option label="服装" value="clothing" />
             <el-option label="配饰" value="accessory" />
-            <el-option label="背景" value="bg" />
+            <el-option label="特效" value="effect" />
+            <el-option label="礼包" value="bundle" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="金币价格">
-          <el-input-number v-model="itemForm.price" :min="0" />
-        </el-form-item>
-        <el-form-item label="RMB价格">
-          <el-input-number v-model="itemForm.rmbPrice" :min="0" :precision="2" />
-        </el-form-item>
-        <el-form-item label="效果">
-          <el-input v-model="itemForm.effect" placeholder='如: {"fullness": 20}' />
-        </el-form-item>
-        <el-form-item label="图标">
-          <el-input v-model="itemForm.icon" placeholder="请输入图标emoji" />
-        </el-form-item>
-      </el-form>
+          <el-select v-model="statusFilter" placeholder="全部状态" style="width:120px;" clearable @change="loadItems">
+            <el-option label="全部状态" value="" />
+            <el-option label="上架中" value="1" />
+            <el-option label="已下架" value="0" />
+          </el-select>
+        </div>
+        <button class="btn btn-primary" @click="openAddModal">+ 添加商品</button>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>商品</th>
+              <th>分类</th>
+              <th>价格</th>
+              <th>销量</th>
+              <th>库存</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in filteredItems" :key="item.id">
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:22px;">{{ item.icon }}</span>
+                  <div>
+                    <div style="font-weight:600;">{{ item.name }}</div>
+                    <div style="font-size:11px;color:#A898B8;">{{ item.desc }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><span :class="['badge', item.categoryBadge]">{{ item.categoryName }}</span></td>
+              <td>
+                <span v-if="item.currency === 'coin'">🪙 {{ item.price }}</span>
+                <span v-else-if="item.currency === 'gem'">💎 {{ item.price }}</span>
+                <span v-else style="color:#D4A000;font-weight:600;">¥{{ item.price }}</span>
+              </td>
+              <td>{{ item.sales.toLocaleString() }}</td>
+              <td>
+                <span v-if="item.stock === -1" style="color:#A898B8;">无限</span>
+                <span v-else-if="item.stock === 0" style="color:#FF6B6B;">售罄</span>
+                <span v-else>{{ item.stock }}</span>
+              </td>
+              <td>
+                <span :class="['badge', item.status === 1 ? 'badge-green' : 'badge-red']">
+                  {{ item.status === 1 ? '上架' : '下架' }}
+                </span>
+              </td>
+              <td>
+                <span class="action-link" @click="openEditModal(item)">编辑</span>
+                <span class="action-link" :style="{ color: item.status === 1 ? '#FF6B6B' : '#3BAF5D' }" @click="toggleStatus(item)">
+                  {{ item.status === 1 ? '下架' : '上架' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add/Edit Item Modal -->
+    <el-dialog v-model="showModal" :title="isEdit ? '编辑商品' : '+ 添加商品'" width="480px">
+      <div class="form-item">
+        <div class="form-label">商品名称</div>
+        <el-input v-model="itemForm.name" placeholder="输入商品名称" />
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">分类</div>
+          <el-select v-model="itemForm.category" style="width:100%;">
+            <el-option label="食品" value="food" />
+            <el-option label="服装" value="clothing" />
+            <el-option label="配饰" value="accessory" />
+            <el-option label="特效" value="effect" />
+            <el-option label="礼包" value="bundle" />
+          </el-select>
+        </div>
+        <div class="form-item">
+          <div class="form-label">货币类型</div>
+          <el-select v-model="itemForm.currency" style="width:100%;">
+            <el-option label="金币 🪙" value="coin" />
+            <el-option label="钻石 💎" value="gem" />
+            <el-option label="人民币 ¥" value="rmb" />
+          </el-select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-item">
+          <div class="form-label">价格</div>
+          <el-input-number v-model="itemForm.price" :min="0" style="width:100%;" />
+        </div>
+        <div class="form-item">
+          <div class="form-label">库存</div>
+          <el-input-number v-model="itemForm.stock" :min="-1" style="width:100%;" placeholder="无限填-1" />
+        </div>
+      </div>
+      <div class="form-item">
+        <div class="form-label">商品描述</div>
+        <el-input v-model="itemForm.desc" placeholder="商品简短描述" />
+      </div>
+      <div class="form-item">
+        <div class="form-label">图标 Emoji</div>
+        <el-input v-model="itemForm.icon" placeholder="如: 🍗 🎀 👗" />
+      </div>
       <template #footer>
-        <el-button @click="showDialog = false">取消</el-button>
-        <el-button type="primary" @click="saveItem">保存</el-button>
+        <button class="btn" @click="showModal = false">取消</button>
+        <button class="btn btn-primary" @click="saveItem">保存</button>
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { itemAdmin } from '@/api/index.js'
 
 const categoryFilter = ref('')
-const showDialog = ref(false)
+const statusFilter = ref('')
+const showModal = ref(false)
 const isEdit = ref(false)
-
-const items = ref([
-  { id: 1, name: '小面包', description: '恢复10点饱食度', category: 'food', price: 10, rmbPrice: 0, effect: '{"fullness": 10}', icon: '🍞', status: 1 },
-  { id: 2, name: '小饼干', description: '恢复20点饱食度', category: 'food', price: 20, rmbPrice: 0, effect: '{"fullness": 20}', icon: '🍪', status: 1 },
-  { id: 3, name: '苹果', description: '恢复30点饱食度', category: 'food', price: 30, rmbPrice: 1, effect: '{"fullness": 30}', icon: '🍎', status: 1 },
-  { id: 4, name: '生日蛋糕', description: '恢复50点饱食度+5点心情', category: 'food', price: 100, rmbPrice: 6, effect: '{"fullness": 50, "mood": 5}', icon: '🎂', status: 1 },
-  { id: 5, name: '粉色连衣裙', description: '可爱的粉色裙子', category: 'clothing', price: 500, rmbPrice: 30, effect: '{"appearance": "pink_dress"}', icon: '👗', status: 1 },
-  { id: 6, name: '小帽子', description: '时尚的小帽子', category: 'accessory', price: 300, rmbPrice: 18, effect: '{"appearance": "hat"}', icon: '🎀', status: 1 }
-])
+const currentItem = ref(null)
+const loading = ref(false)
 
 const itemForm = ref({
-  id: null,
   name: '',
-  description: '',
   category: 'food',
+  currency: 'coin',
   price: 0,
-  rmbPrice: 0,
-  effect: '',
+  stock: -1,
+  desc: '',
   icon: ''
 })
 
-const getIcon = (cat) => {
-  const map = { food: '🍖', clothing: '👗', accessory: '🎀', bg: '🖼️' }
-  return map[cat] || '📦'
+const allItems = ref([])
+const total = ref(0)
+
+const filteredItems = computed(() => {
+  return allItems.value
+})
+
+const loadItems = async () => {
+  loading.value = true
+  try {
+    const params = { page: 1, pageSize: 100 }
+    if (categoryFilter.value) params.category = categoryFilter.value
+    if (statusFilter.value) params.status = parseInt(statusFilter.value)
+    const res = await itemAdmin.list(params)
+    if (res.code === 200 && res.data) {
+      const categoryMap = { food: '食品', clothing: '服装', accessory: '配饰', effect: '特效', bundle: '礼包' }
+      const categoryBadgeMap = { food: 'badge-yellow', clothing: 'badge-purple', accessory: 'badge-blue', effect: 'badge-purple', bundle: 'badge-red' }
+      const currencyMap = { coin: 'coin', gem: 'gem', rmb: 'rmb' }
+      allItems.value = (res.data.list || []).map(item => ({
+        id: item.id,
+        name: item.name || '',
+        icon: item.icon || '📦',
+        desc: item.description || '',
+        category: item.category || 'food',
+        categoryName: categoryMap[item.category] || item.category,
+        categoryBadge: categoryBadgeMap[item.category] || 'badge-blue',
+        currency: currencyMap[item.category] || 'coin',
+        price: item.price || 0,
+        sales: 0,
+        stock: -1,
+        status: item.status !== undefined ? item.status : 1
+      }))
+      total.value = res.data.total || 0
+    }
+  } catch (e) {
+    console.error('加载商品失败', e)
+    ElMessage.error('加载商品列表失败')
+  } finally {
+    loading.value = false
+  }
 }
 
-const getCategoryName = (cat) => {
-  const map = { food: '食品', clothing: '服装', accessory: '配饰', bg: '背景' }
-  return map[cat] || cat
-}
-
-const loadItems = () => {
-  console.log('Load items:', categoryFilter.value)
-}
-
-const showAddDialog = () => {
+const openAddModal = () => {
   isEdit.value = false
-  itemForm.value = { id: null, name: '', description: '', category: 'food', price: 0, rmbPrice: 0, effect: '', icon: '' }
-  showDialog.value = true
+  itemForm.value = { name: '', category: 'food', currency: 'coin', price: 0, stock: -1, desc: '', icon: '' }
+  showModal.value = true
 }
 
-const editItem = (item) => {
+const openEditModal = (item) => {
   isEdit.value = true
+  currentItem.value = item
   itemForm.value = { ...item }
-  showDialog.value = true
+  showModal.value = true
 }
 
-const saveItem = () => {
+const saveItem = async () => {
   if (!itemForm.value.name) {
     ElMessage.warning('请输入商品名称')
     return
   }
-  ElMessage.success(isEdit.value ? '商品已更新' : '商品已添加')
-  showDialog.value = false
-  loadItems()
+  try {
+    const data = {
+      name: itemForm.value.name,
+      category: itemForm.value.category,
+      price: itemForm.value.price,
+      description: itemForm.value.desc,
+      icon: itemForm.value.icon,
+      isFree: false,
+      status: 1
+    }
+    let res
+    if (isEdit.value) {
+      res = await itemAdmin.update(currentItem.value.id, data)
+    } else {
+      res = await itemAdmin.create(data)
+    }
+    if (res.code === 200) {
+      ElMessage.success(isEdit.value ? '商品已更新' : '商品已添加')
+      showModal.value = false
+      loadItems()
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
 }
 
-const deleteItem = (item) => {
-  ElMessageBox.confirm(`确定要删除商品 ${item.name} 吗？`, '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    ElMessage.success('商品已删除')
-    loadItems()
-  })
-}
-
-const toggleStatus = (item) => {
-  ElMessage.success(`商品已${item.status === 1 ? '启用' : '禁用'}`)
+const toggleStatus = async (item) => {
+  try {
+    const res = await itemAdmin.toggleStatus(item.id)
+    if (res.code === 200) {
+      ElMessage.success(res.data || (item.status === 1 ? '商品已下架' : '商品已上架'))
+      loadItems()
+    } else {
+      ElMessage.error(res.message || '操作失败')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
 }
 
 onMounted(() => {
@@ -183,35 +262,5 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.items-page { padding: 0; }
-
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.filter-area .el-select { width: 150px; }
-
-.items-table { background: white; border-radius: 8px; }
-
-.item-info-cell {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.item-icon { font-size: 28px; }
-
-.item-detail {
-  display: flex;
-  flex-direction: column;
-}
-
-.item-name { font-weight: 600; }
-.item-desc { font-size: 12px; color: #7A6B8A; }
-
-.price { font-weight: 600; }
-.free-tag { color: #67C23A; font-weight: 600; }
-.effect { font-size: 12px; color: #7A6B8A; }
+.admin-page { display: block; }
 </style>

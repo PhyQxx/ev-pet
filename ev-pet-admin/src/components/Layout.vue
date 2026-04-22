@@ -1,67 +1,93 @@
 <template>
-  <el-container class="layout">
-    <el-aside width="220px" class="sidebar">
-      <div class="logo">
-        <span class="logo-icon">🐾</span>
-        <span class="logo-text">EV Pet</span>
+  <el-container class="ev-admin-layout">
+    <!-- Sidebar -->
+    <el-aside width="220px" class="ev-sidebar">
+      <!-- Logo -->
+      <div class="ev-logo">
+        <div class="ev-logo-icon">🐾</div>
+        <span class="ev-logo-text">EV Pet</span>
       </div>
-      <el-menu :default-active="route.path" router class="sidebar-menu">
-        <el-menu-item index="/dashboard">
-          <el-icon><DataAnalysis /></el-icon>
-          <span>数据看板</span>
-        </el-menu-item>
-        <el-menu-item index="/users">
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
-        </el-menu-item>
-        <el-menu-item index="/content">
-          <el-icon><Document /></el-icon>
-          <span>内容审核</span>
-        </el-menu-item>
-        <el-menu-item index="/items">
-          <el-icon><Goods /></el-icon>
-          <span>商品管理</span>
-        </el-menu-item>
-        <el-menu-item index="/announcements">
-          <el-icon><Bell /></el-icon>
-          <span>公告管理</span>
-        </el-menu-item>
-        <el-menu-item index="/activities">
-          <el-icon><MagicStick /></el-icon>
-          <span>活动管理</span>
-        </el-menu-item>
-        <el-menu-item index="/permissions">
-          <el-icon><Lock /></el-icon>
-          <span>账号权限</span>
-        </el-menu-item>
-        <el-menu-item index="/settings">
-          <el-icon><Setting /></el-icon>
-          <span>系统配置</span>
-        </el-menu-item>
-      </el-menu>
-    </el-aside>
-    
-    <el-container>
-      <el-header class="header">
-        <h2 class="page-title">{{ pageTitle }}</h2>
-        <div class="header-right">
-          <el-button type="primary" plain size="small">预览前台</el-button>
-          <el-dropdown>
-            <span class="admin-user">
-              <el-avatar :size="32">管</el-avatar>
-              <span>管理员</span>
-            </span>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>个人中心</el-dropdown-item>
-                <el-dropdown-item divided>退出登录</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
+
+      <!-- Nav -->
+      <nav class="ev-nav">
+        <div class="ev-nav-section">
+          <div class="ev-nav-label">数据概览</div>
+          <router-link
+            v-for="item in overviewNav"
+            :key="item.path"
+            :to="item.path"
+            class="ev-nav-item"
+            :class="{ active: isActive(item.path) }"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </router-link>
         </div>
-      </el-header>
-      
-      <el-main class="main">
+
+        <div class="ev-nav-section">
+          <div class="ev-nav-label">用户与内容</div>
+          <router-link
+            v-for="item in userNav"
+            :key="item.path"
+            :to="item.path"
+            class="ev-nav-item"
+            :class="{ active: isActive(item.path) }"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+            <span v-if="item.count" class="ev-nav-count">{{ item.count }}</span>
+            <span v-if="item.dot" class="ev-nav-dot"></span>
+          </router-link>
+        </div>
+
+        <div class="ev-nav-section">
+          <div class="ev-nav-label">商城与运营</div>
+          <router-link
+            v-for="item in shopNav"
+            :key="item.path"
+            :to="item.path"
+            class="ev-nav-item"
+            :class="{ active: isActive(item.path) }"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </router-link>
+        </div>
+
+        <div class="ev-nav-section">
+          <div class="ev-nav-label">系统</div>
+          <router-link
+            v-for="item in systemNav"
+            :key="item.path"
+            :to="item.path"
+            class="ev-nav-item"
+            :class="{ active: isActive(item.path) }"
+          >
+            <span class="ev-nav-icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+            <span v-if="item.dot" class="ev-nav-dot"></span>
+          </router-link>
+        </div>
+      </nav>
+    </el-aside>
+
+    <el-container class="ev-inner-container">
+      <!-- Topbar -->
+      <div class="ev-topbar">
+        <div class="ev-topbar-brand">
+          <span class="ev-topbar-brand-text">EV Pet · 运营后台</span>
+        </div>
+        <div class="ev-topbar-right">
+          <div class="ev-admin-info">
+            <span>👤 管理员：{{ adminName }}</span>
+          </div>
+          <div class="ev-admin-avatar">👨‍💻</div>
+          <span class="ev-topbar-badge">Beta</span>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <el-main class="ev-main">
         <router-view />
       </el-main>
     </el-container>
@@ -74,31 +100,221 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
-const pageTitle = computed(() => {
-  const titles = {
-    '/dashboard': '数据看板',
-    '/users': '用户管理',
-    '/content': '内容审核',
-    '/items': '商品管理',
-    '/announcements': '公告管理',
-    '/activities': '活动管理',
-    '/permissions': '账号权限',
-    '/settings': '系统配置'
-  }
-  return titles[route.path] || '管理后台'
-})
+const adminName = '小明'
+
+const overviewNav = [
+  { icon: '📊', label: '数据看板', path: '/dashboard' },
+  { icon: '📈', label: '运营报表', path: '/report' },
+]
+
+const userNav = [
+  { icon: '👥', label: '用户管理', path: '/users', count: 2 },
+  { icon: '📝', label: '内容审核', path: '/content', dot: true },
+  { icon: '🐾', label: '宠物管理', path: '/pets' },
+]
+
+const shopNav = [
+  { icon: '🛒', label: '商品管理', path: '/items' },
+  { icon: '📢', label: '公告管理', path: '/announcements' },
+  { icon: '🎉', label: '活动管理', path: '/activities' },
+]
+
+const systemNav = [
+  { icon: '⚙️', label: '账号权限', path: '/permissions' },
+  { icon: '🔧', label: '系统配置', path: '/settings', dot: true },
+]
+
+const isActive = (path) => {
+  if (path === '/dashboard') return route.path === '/' || route.path === '/dashboard'
+  return route.path.startsWith(path)
+}
 </script>
 
 <style scoped>
-.layout { height: 100vh; }
-.sidebar { background: linear-gradient(180deg, #2C3E50 0%, #34495E 100%); }
-.logo { padding: 20px; display: flex; align-items: center; gap: 10px; color: white; }
-.logo-icon { font-size: 28px; }
-.logo-text { font-size: 20px; font-weight: 700; }
-.sidebar-menu { border-right: none; }
-.header { background: white; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid #eee; }
-.page-title { font-size: 18px; font-weight: 600; }
-.header-right { display: flex; align-items: center; gap: 16px; }
-.admin-user { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.main { padding: 24px; background: #F5F7FA; }
+/* ── Layout ── */
+.ev-admin-layout {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+}
+
+/* ── Sidebar ── */
+.ev-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #fff;
+  border-right: 1px solid #EDE4FF;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+/* Logo */
+.ev-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px 16px;
+}
+
+.ev-logo-icon {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #FFB3C6, #D5AAFF);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ev-logo-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #4A3F55;
+  letter-spacing: 1px;
+}
+
+/* Nav */
+.ev-nav {
+  padding: 4px 12px 20px;
+  flex: 1;
+}
+
+.ev-nav-section {
+  margin-bottom: 20px;
+}
+
+.ev-nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #A898B8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+}
+
+.ev-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: #7A6B8A;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  margin-bottom: 2px;
+  text-decoration: none;
+  position: relative;
+}
+
+.ev-nav-item:hover {
+  background: #F9F5FF;
+  color: #4A3F55;
+}
+
+.ev-nav-item.active {
+  background: #F9F5FF;
+  color: #D5AAFF;
+  font-weight: 700;
+  border-color: #EDE4FF;
+}
+
+.ev-nav-icon {
+  font-size: 14px;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ev-nav-count {
+  margin-left: auto;
+  font-size: 10px;
+  background: #FFE5E5;
+  color: #FF6B6B;
+  padding: 2px 7px;
+  border-radius: 8px;
+}
+
+.ev-nav-dot {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #B8F1CC;
+}
+
+/* ── Inner Container ── */
+.ev-inner-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+.ev-topbar {
+  background: linear-gradient(135deg, #4A3F55 0%, #6B5B8A 100%);
+  padding: 16px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 64px;
+}
+
+.ev-topbar-brand-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1px;
+}
+
+.ev-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ev-admin-info {
+  font-size: 13px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ev-admin-avatar {
+  width: 32px;
+  height: 32px;
+  background: #D5AAFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.ev-topbar-badge {
+  background: #FF6B6B;
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 8px;
+}
+
+/* ── Main ── */
+.ev-main {
+  flex: 1;
+  background: #F5F0FA;
+  padding: 24px 28px;
+  overflow-y: auto;
+}
 </style>
