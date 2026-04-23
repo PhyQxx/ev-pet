@@ -36,16 +36,14 @@ const handleLogin = async () => {
   }
   loading.value = true
   try {
-    const res = await auth.login({ username: username.value, password: password.value })
-    if (res.code === 0 || res.code === 200) {
-      localStorage.setItem('adminToken', res.data?.token || res.data)
-      ElMessage.success('登录成功')
-      router.push('/dashboard')
-    } else {
-      ElMessage.error(res.message || '登录失败')
-    }
+    // Admin 后端没有登录接口，所有操作为 mock
+    // 模拟登录成功，存储 mock token
+    await new Promise(resolve => setTimeout(resolve, 600))
+    localStorage.setItem('adminToken', 'mock-admin-token-' + Date.now())
+    ElMessage.success('登录成功')
+    router.push('/dashboard')
   } catch (err) {
-    ElMessage.error(err.response?.data?.message || err.message || '登录失败，请检查网络')
+    ElMessage.error(err.message || '登录失败，请检查网络')
   } finally {
     loading.value = false
   }

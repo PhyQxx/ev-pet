@@ -154,13 +154,5 @@ onMounted(() => { loadAchievements() })
 <style scoped>
 .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
 .filter-item { display: flex; align-items: center; gap: 6px; }
-.filter-label { font-size: 13px; color: #7A6B8A; }
-.filter-select { padding: 6px 12px; border: 1px solid #E8DFF0; border-radius: 8px; background: #fff; font-size: 13px; }
-.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.kpi-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(180,150,200,0.07); border: 1px solid #F5EEF8; }
-.kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
-.kpi-val { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
-.kpi-label { font-size: 12px; color: #7A6B8A; }
-.btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; }
-.btn-primary { background: linear-gradient(135deg, #FFB3C6, #D5AAFF); color: #fff; }
+.filter-label { font-size: 13px; color: var(--ev-text-secondary); }
 </style>

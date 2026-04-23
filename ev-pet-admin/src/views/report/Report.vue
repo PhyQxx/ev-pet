@@ -221,13 +221,8 @@ onMounted(() => {
 <style scoped>
 .filter-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
 .filter-item { display: flex; align-items: center; gap: 6px; }
-.filter-label { font-size: 13px; color: #7A6B8A; }
-.filter-select { padding: 6px 12px; border: 1px solid #E8DFF0; border-radius: 8px; background: #fff; font-size: 13px; }
-.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-.kpi-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(180,150,200,0.07); border: 1px solid #F5EEF8; }
-.kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
-.kpi-val { font-size: 24px; font-weight: 700; margin-bottom: 2px; }
-.kpi-label { font-size: 12px; color: #7A6B8A; }
+.filter-label { font-size: 13px; color: var(--ev-text-secondary); }
+.filter-select { padding: 6px 12px; border: 1px solid var(--ev-border); border-radius: var(--ev-radius-xs); background: #fff; font-size: 13px; }
 .kpi-change { font-size: 11px; margin-top: 6px; }
 .kpi-change.up { color: #3BAF5D; }
 .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -240,7 +235,4 @@ onMounted(() => {
 .bar-label { font-size: 11px; color: #A898B8; margin-top: 6px; text-align: center; }
 .chart-summary { display: flex; justify-content: space-between; font-size: 12px; color: #7A6B8A; margin-top: 12px; padding: 0 4px; }
 .chart-summary .up { color: #3BAF5D; }
-.btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; }
-.btn-primary { background: linear-gradient(135deg, #FFB3C6, #D5AAFF); color: #fff; }
-.btn-outline { background: #fff; border: 1px solid #E8DFF0; color: #7A6B8A; }
 </style>

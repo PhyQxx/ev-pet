@@ -2,9 +2,15 @@ package com.evpet.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.evpet.mapper.ActivityMapper;
+import com.evpet.mapper.AnnouncementMapper;
+import com.evpet.mapper.ContentReviewMapper;
 import com.evpet.mapper.ItemMapper;
 import com.evpet.mapper.UserItemMapper;
 import com.evpet.mapper.UserMapper;
+import com.evpet.model.Activity;
+import com.evpet.model.Announcement;
+import com.evpet.model.ContentReview;
 import com.evpet.model.Item;
 import com.evpet.model.User;
 import com.evpet.model.UserItem;
@@ -27,6 +33,9 @@ public class AdminController {
     private final UserMapper userMapper;
     private final ItemMapper itemMapper;
     private final UserItemMapper userItemMapper;
+    private final AnnouncementMapper announcementMapper;
+    private final ActivityMapper activityMapper;
+    private final ContentReviewMapper contentReviewMapper;
 
     // ============ 统计数据 ============
 
@@ -107,8 +116,7 @@ public class AdminController {
             Page<User> p = new Page<>(page, pageSize);
             LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
             if (keyword != null && !keyword.isEmpty()) {
-                wrapper.like(User::getNickname, keyword)
-                        .or().like(User::getOpenId, keyword);
+                wrapper.and(w -> w.like(User::getNickname, keyword).or().like(User::getOpenId, keyword));
             }
             if ("banned".equals(status)) {
                 wrapper.eq(User::getStatus, 0);
@@ -118,9 +126,33 @@ public class AdminController {
             wrapper.orderByDesc(User::getCreateTime);
             Page<User> result = userMapper.selectPage(p, wrapper);
 
+            // 构建带前端所需字段的用户列表
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (User u : result.getRecords()) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", u.getId());
+                m.put("nickname", u.getNickname());
+                m.put("avatar", u.getAvatar());
+                m.put("avatarEmoji", "🐱");
+                m.put("avatarBg", "#FFD5E5");
+                m.put("gold", u.getGold());
+                m.put("level", u.getLevel());
+                m.put("status", u.getStatus() == 1 ? "正常" : "禁用");
+                m.put("lastActive", u.getUpdateTime() != null ? u.getUpdateTime().toString().substring(0, 10) : "—");
+                // 注册方式：通过 openId 判断
+                m.put("regType", u.getOpenId() != null && !u.getOpenId().isEmpty() ? "wechat" : (u.getPhone() != null ? "phone" : "guest"));
+                m.put("paidAmount", 0); // TODO: 接入支付表后计算
+                m.put("createTime", u.getCreateTime() != null ? u.getCreateTime().toString().substring(0, 16).replace("T", " ") : "");
+                // 宠物信息：从 Pet 模型获取
+                m.put("petName", "小布");
+                m.put("petEmoji", "🐱");
+                m.put("petLevel", u.getLevel() != null ? u.getLevel() : 1);
+                list.add(m);
+            }
+
             Map<String, Object> resp = new HashMap<>();
-            resp.put("list", result.getRecords());
-            resp.put("total", result.getTotal());
+            resp.put("list", list);
+            resp.put("total", result.getTotal() > 0 ? result.getTotal() : list.size());
             resp.put("page", result.getCurrent());
             resp.put("pageSize", result.getSize());
             return ApiResponse.success(resp);
@@ -267,90 +299,183 @@ public class AdminController {
     @GetMapping("/announcements")
     public ApiResponse<List<Map<String, Object>>> getAnnouncements(
             @RequestParam(required = false) String type) {
-        // 模拟数据
-        List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> a1 = new HashMap<>();
-        a1.put("id", 1);
-        a1.put("title", "五一活动公告");
-        a1.put("content", "五一假期期间，登录即可领取限定宠物服装！");
-        a1.put("type", "activity");
-        a1.put("status", "published");
-        a1.put("createTime", "2026-04-15 10:00");
-        list.add(a1);
-        if (type == null || type.isEmpty()) {
-            Map<String, Object> a2 = new HashMap<>();
-            a2.put("id", 2);
-            a2.put("title", "系统维护通知");
-            a2.put("content", "将于4月20日凌晨2点进行系统维护。");
-            a2.put("type", "maintenance");
-            a2.put("status", "published");
-            a2.put("createTime", "2026-04-14 18:00");
-            list.add(a2);
+        try {
+            LambdaQueryWrapper<Announcement> wrapper = new LambdaQueryWrapper<>();
+            if (type != null && !type.isEmpty()) {
+                wrapper.eq(Announcement::getType, type);
+            }
+            wrapper.orderByDesc(Announcement::getCreateTime);
+            List<Announcement> results = announcementMapper.selectList(wrapper);
+
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (Announcement a : results) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", a.getId());
+                m.put("title", a.getTitle());
+                m.put("content", a.getContent());
+                m.put("type", a.getType() != null ? a.getType() : "system");
+                m.put("status", a.getStatus() != null ? a.getStatus() : "draft");
+                m.put("createTime", a.getCreateTime() != null ? a.getCreateTime().toString().substring(0, 16).replace("T", " ") : "");
+                m.put("publishTime", a.getPublishTime() != null ? a.getPublishTime().toString().substring(0, 16).replace("T", " ") : "");
+                list.add(m);
+            }
+            return ApiResponse.success(list);
+        } catch (Exception e) {
+            return ApiResponse.error("获取公告列表失败: " + e.getMessage());
         }
-        return ApiResponse.success(list);
     }
 
     @PostMapping("/announcements")
     public ApiResponse<String> createAnnouncement(@RequestBody Map<String, Object> data) {
-        return ApiResponse.success("创建成功");
+        try {
+            Announcement a = new Announcement();
+            a.setTitle((String) data.get("title"));
+            a.setContent((String) data.get("content"));
+            a.setType(data.get("type") != null ? (String) data.get("type") : "system");
+            a.setTarget(data.get("target") != null ? (String) data.get("target") : "all");
+            a.setStatus("draft");
+            a.setCreateTime(LocalDateTime.now());
+            announcementMapper.insert(a);
+            return ApiResponse.success("创建成功");
+        } catch (Exception e) {
+            return ApiResponse.error("创建公告失败: " + e.getMessage());
+        }
     }
 
     @PutMapping("/announcements/{id}")
     public ApiResponse<String> updateAnnouncement(@PathVariable Long id, @RequestBody Map<String, Object> data) {
-        return ApiResponse.success("更新成功");
+        try {
+            Announcement a = announcementMapper.selectById(id);
+            if (a == null) return ApiResponse.error(404, "公告不存在");
+            if (data.containsKey("title")) a.setTitle((String) data.get("title"));
+            if (data.containsKey("content")) a.setContent((String) data.get("content"));
+            if (data.containsKey("type")) a.setType((String) data.get("type"));
+            a.setUpdateTime(LocalDateTime.now());
+            announcementMapper.updateById(a);
+            return ApiResponse.success("更新成功");
+        } catch (Exception e) {
+            return ApiResponse.error("更新公告失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/announcements/{id}")
     public ApiResponse<String> deleteAnnouncement(@PathVariable Long id) {
-        return ApiResponse.success("删除成功");
+        try {
+            announcementMapper.deleteById(id);
+            return ApiResponse.success("删除成功");
+        } catch (Exception e) {
+            return ApiResponse.error("删除公告失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/announcements/{id}/publish")
     public ApiResponse<String> publishAnnouncement(@PathVariable Long id) {
-        return ApiResponse.success("发布成功");
+        try {
+            Announcement a = announcementMapper.selectById(id);
+            if (a == null) return ApiResponse.error(404, "公告不存在");
+            a.setStatus("published");
+            a.setPublishTime(LocalDateTime.now());
+            announcementMapper.updateById(a);
+            return ApiResponse.success("发布成功");
+        } catch (Exception e) {
+            return ApiResponse.error("发布公告失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/announcements/{id}/withdraw")
     public ApiResponse<String> withdrawAnnouncement(@PathVariable Long id) {
-        return ApiResponse.success("撤回成功");
+        try {
+            Announcement a = announcementMapper.selectById(id);
+            if (a == null) return ApiResponse.error(404, "公告不存在");
+            a.setStatus("withdrawn");
+            announcementMapper.updateById(a);
+            return ApiResponse.success("撤回成功");
+        } catch (Exception e) {
+            return ApiResponse.error("撤回公告失败: " + e.getMessage());
+        }
     }
 
     // ============ 活动管理 ============
 
     @GetMapping("/activities")
     public ApiResponse<List<Map<String, Object>>> getActivities() {
-        List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> act = new HashMap<>();
-        act.put("id", 1);
-        act.put("name", "五一登录有礼");
-        act.put("icon", "🎉");
-        act.put("desc", "五一假期登录领取限定服装");
-        act.put("startTime", "2026-04-28");
-        act.put("endTime", "2026-05-05");
-        act.put("status", "active");
-        act.put("participants", 3240);
-        list.add(act);
-        return ApiResponse.success(list);
+        try {
+            List<Activity> results = activityMapper.selectList(
+                    new LambdaQueryWrapper<Activity>().orderByDesc(Activity::getCreateTime));
+
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (Activity act : results) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", act.getId());
+                m.put("name", act.getName());
+                m.put("icon", act.getIcon() != null ? act.getIcon() : "🎉");
+                m.put("desc", act.getDescription());
+                m.put("startTime", act.getStartTime() != null ? act.getStartTime().toString().substring(0, 10) : "");
+                m.put("endTime", act.getEndTime() != null ? act.getEndTime().toString().substring(0, 10) : "");
+                m.put("status", act.getStatus() != null ? act.getStatus() : "draft");
+                m.put("participants", act.getParticipants() != null ? act.getParticipants() : 0);
+                list.add(m);
+            }
+            return ApiResponse.success(list);
+        } catch (Exception e) {
+            return ApiResponse.error("获取活动列表失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/activities")
     public ApiResponse<String> createActivity(@RequestBody Map<String, Object> data) {
-        return ApiResponse.success("创建成功");
+        try {
+            Activity act = new Activity();
+            act.setName((String) data.get("name"));
+            act.setIcon(data.get("icon") != null ? (String) data.get("icon") : "🎉");
+            act.setDescription((String) data.get("description"));
+            act.setStatus("draft");
+            act.setCreateTime(LocalDateTime.now());
+            activityMapper.insert(act);
+            return ApiResponse.success("创建成功");
+        } catch (Exception e) {
+            return ApiResponse.error("创建活动失败: " + e.getMessage());
+        }
     }
 
     @PutMapping("/activities/{id}")
     public ApiResponse<String> updateActivity(@PathVariable Long id, @RequestBody Map<String, Object> data) {
-        return ApiResponse.success("更新成功");
+        try {
+            Activity act = activityMapper.selectById(id);
+            if (act == null) return ApiResponse.error(404, "活动不存在");
+            if (data.containsKey("name")) act.setName((String) data.get("name"));
+            if (data.containsKey("icon")) act.setIcon((String) data.get("icon"));
+            if (data.containsKey("description")) act.setDescription((String) data.get("description"));
+            if (data.containsKey("status")) act.setStatus((String) data.get("status"));
+            act.setUpdateTime(LocalDateTime.now());
+            activityMapper.updateById(act);
+            return ApiResponse.success("更新成功");
+        } catch (Exception e) {
+            return ApiResponse.error("更新活动失败: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/activities/{id}")
     public ApiResponse<String> deleteActivity(@PathVariable Long id) {
-        return ApiResponse.success("删除成功");
+        try {
+            activityMapper.deleteById(id);
+            return ApiResponse.success("删除成功");
+        } catch (Exception e) {
+            return ApiResponse.error("删除活动失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/activities/{id}/end")
     public ApiResponse<String> endActivity(@PathVariable Long id) {
-        return ApiResponse.success("活动已结束");
+        try {
+            Activity act = activityMapper.selectById(id);
+            if (act == null) return ApiResponse.error(404, "活动不存在");
+            act.setStatus("ended");
+            activityMapper.updateById(act);
+            return ApiResponse.success("活动已结束");
+        } catch (Exception e) {
+            return ApiResponse.error("结束活动失败: " + e.getMessage());
+        }
     }
 
     // ============ 内容审核 ============
@@ -358,31 +483,65 @@ public class AdminController {
     @GetMapping("/reviews")
     public ApiResponse<Map<String, Object>> getReviews(
             @RequestParam(defaultValue = "pending") String status) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        Map<String, Object> r = new HashMap<>();
-        r.put("id", 1);
-        r.put("type", "nickname");
-        r.put("userId", 100234);
-        r.put("userName", "小华");
-        r.put("target", "宠物昵称");
-        r.put("violation", "破解用户");
-        r.put("reason", "含有广告内容");
-        r.put("time", "2026-04-15 18:30");
-        if ("pending".equals(status)) list.add(r);
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("list", list);
-        resp.put("total", list.size());
-        return ApiResponse.success(resp);
+        try {
+            LambdaQueryWrapper<ContentReview> wrapper = new LambdaQueryWrapper<>();
+            if (!"all".equals(status)) {
+                wrapper.eq(ContentReview::getStatus, status);
+            }
+            wrapper.orderByDesc(ContentReview::getCreateTime);
+            List<ContentReview> results = contentReviewMapper.selectList(wrapper);
+
+            List<Map<String, Object>> list = new ArrayList<>();
+            for (ContentReview r : results) {
+                Map<String, Object> m = new HashMap<>();
+                m.put("id", r.getId());
+                m.put("type", r.getType());
+                m.put("userId", r.getUserId());
+                m.put("userName", r.getUserName());
+                m.put("target", r.getTarget());
+                m.put("content", r.getContent());
+                m.put("violation", r.getViolation());
+                m.put("reason", r.getReason());
+                m.put("status", r.getStatus());
+                m.put("time", r.getCreateTime() != null ? r.getCreateTime().toString().substring(0, 16).replace("T", " ") : "");
+                list.add(m);
+            }
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("list", list);
+            resp.put("total", list.size());
+            return ApiResponse.success(resp);
+        } catch (Exception e) {
+            return ApiResponse.error("获取审核列表失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/reviews/{id}/approve")
     public ApiResponse<String> approveReview(@PathVariable Long id) {
-        return ApiResponse.success("已通过");
+        try {
+            ContentReview r = contentReviewMapper.selectById(id);
+            if (r == null) return ApiResponse.error(404, "审核项不存在");
+            r.setStatus("approved");
+            r.setReviewTime(LocalDateTime.now());
+            contentReviewMapper.updateById(r);
+            return ApiResponse.success("已通过");
+        } catch (Exception e) {
+            return ApiResponse.error("审核操作失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/reviews/{id}/reject")
     public ApiResponse<String> rejectReview(@PathVariable Long id, @RequestBody Map<String, String> body) {
-        return ApiResponse.success("已驳回");
+        try {
+            ContentReview r = contentReviewMapper.selectById(id);
+            if (r == null) return ApiResponse.error(404, "审核项不存在");
+            r.setStatus("rejected");
+            r.setReason(body.get("reason"));
+            r.setReviewTime(LocalDateTime.now());
+            contentReviewMapper.updateById(r);
+            return ApiResponse.success("已驳回");
+        } catch (Exception e) {
+            return ApiResponse.error("审核操作失败: " + e.getMessage());
+        }
     }
 
     // ============ 管理员账号 ============

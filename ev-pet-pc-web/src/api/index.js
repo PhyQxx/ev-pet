@@ -19,7 +19,17 @@ api.interceptors.request.use(config => {
 
 // 响应拦截器
 api.interceptors.response.use(
-  response => response.data,
+  response => {
+    const res = response.data
+    // 统一解包 ApiResponse< T > 格式
+    if (res && typeof res === 'object' && 'code' in res) {
+      if (res.code !== 200) {
+        return Promise.reject(new Error(res.message || '请求失败'))
+      }
+      return res.data
+    }
+    return res
+  },
   error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')

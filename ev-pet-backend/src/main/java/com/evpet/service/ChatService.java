@@ -51,7 +51,7 @@ public class ChatService {
 
         // 构建上下文
         String context = buildContext(pet);
-        List<ChatMessage> history = getChatHistory(userId, pet.getId());
+        List<ChatMessage> history = getChatHistory(userId);
 
         // 调用AI
         String aiResponse = callMiniMax(context, history, safeContent);
@@ -62,11 +62,16 @@ public class ChatService {
         return ApiResponse.success(aiResponse);
     }
 
-    public List<ChatMessage> getChatHistory(Long userId, Long petId) {
+    public List<ChatMessage> getChatHistory(Long userId) {
+        Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>()
+                .eq(Pet::getUserId, userId));
+        if (pet == null) {
+            return new ArrayList<>();
+        }
         return chatMessageMapper.selectList(
                 new LambdaQueryWrapper<ChatMessage>()
                         .eq(ChatMessage::getUserId, userId)
-                        .eq(ChatMessage::getPetId, petId)
+                        .eq(ChatMessage::getPetId, pet.getId())
                         .orderByAsc(ChatMessage::getCreateTime)
                         .last("LIMIT " + MAX_HISTORY)
         );

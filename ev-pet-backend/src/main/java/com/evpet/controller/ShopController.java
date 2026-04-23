@@ -5,7 +5,6 @@ import com.evpet.model.Item;
 import com.evpet.model.Pet;
 import com.evpet.model.UserItem;
 import com.evpet.service.ShopService;
-import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +15,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/shop")
 @RequiredArgsConstructor
-public class ShopController {
+public class ShopController extends BaseController {
 
     private final ShopService shopService;
-    private final JwtUtil jwtUtil;
     private final PetMapper petMapper;
 
     @GetMapping("/items")
@@ -92,8 +90,4 @@ public class ShopController {
         }
     }
 
-    private Long getUserIdFromToken(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return jwtUtil.getUserIdFromToken(actualToken);
-    }
 }

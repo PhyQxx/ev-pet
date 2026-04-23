@@ -1,7 +1,6 @@
 package com.evpet.controller;
 
 import com.evpet.service.SocialService;
-import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import com.evpet.vo.SocialVO;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/social")
 @RequiredArgsConstructor
-public class SocialController {
+public class SocialController extends BaseController {
 
     private final SocialService socialService;
-    private final JwtUtil jwtUtil;
 
     @GetMapping("/friends")
     public ApiResponse<SocialVO> getFriends(@RequestHeader("Authorization") String token) {
@@ -106,8 +104,4 @@ public class SocialController {
         }
     }
 
-    private Long getUserIdFromToken(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return jwtUtil.getUserIdFromToken(actualToken);
-    }
 }

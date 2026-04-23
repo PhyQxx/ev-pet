@@ -1,7 +1,6 @@
 package com.evpet.controller;
 
 import com.evpet.service.AchievementService;
-import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import com.evpet.vo.AchievementVO;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/achievement")
 @RequiredArgsConstructor
-public class AchievementController {
+public class AchievementController extends BaseController {
 
     private final AchievementService achievementService;
-    private final JwtUtil jwtUtil;
 
     @GetMapping("/list")
     public ApiResponse<AchievementVO> getAchievements(@RequestHeader("Authorization") String token) {
@@ -37,8 +35,4 @@ public class AchievementController {
         }
     }
 
-    private Long getUserIdFromToken(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return jwtUtil.getUserIdFromToken(actualToken);
-    }
 }

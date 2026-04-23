@@ -142,11 +142,11 @@ const isActive = (path) => {
 .ev-sidebar {
   width: 220px;
   flex-shrink: 0;
-  background: #fff;
-  border-right: 1px solid #EDE4FF;
+  background: linear-gradient(180deg, #4A3F55 0%, #2C3E50 100%);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Logo */
@@ -172,7 +172,7 @@ const isActive = (path) => {
 .ev-logo-text {
   font-size: 15px;
   font-weight: 700;
-  color: #4A3F55;
+  color: #fff;
   letter-spacing: 1px;
 }
 
@@ -189,7 +189,7 @@ const isActive = (path) => {
 .ev-nav-label {
   font-size: 10px;
   font-weight: 700;
-  color: #A898B8;
+  color: rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 0 8px;
@@ -205,7 +205,7 @@ const isActive = (path) => {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  color: #7A6B8A;
+  color: rgba(255, 255, 255, 0.6);
   transition: all 0.2s;
   border: 1px solid transparent;
   margin-bottom: 2px;
@@ -214,15 +214,15 @@ const isActive = (path) => {
 }
 
 .ev-nav-item:hover {
-  background: #F9F5FF;
-  color: #4A3F55;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .ev-nav-item.active {
-  background: #F9F5FF;
+  background: rgba(213, 170, 255, 0.2);
   color: #D5AAFF;
   font-weight: 700;
-  border-color: #EDE4FF;
+  border-color: rgba(213, 170, 255, 0.3);
 }
 
 .ev-nav-icon {
@@ -235,7 +235,7 @@ const isActive = (path) => {
 .ev-nav-count {
   margin-left: auto;
   font-size: 10px;
-  background: #FFE5E5;
+  background: rgba(255, 107, 107, 0.2);
   color: #FF6B6B;
   padding: 2px 7px;
   border-radius: 8px;
@@ -247,6 +247,7 @@ const isActive = (path) => {
   height: 8px;
   border-radius: 50%;
   background: #B8F1CC;
+  box-shadow: 0 0 6px rgba(184, 241, 204, 0.5);
 }
 
 /* ── Inner Container ── */
@@ -255,6 +256,7 @@ const isActive = (path) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 /* ── Topbar ── */
@@ -268,6 +270,7 @@ const isActive = (path) => {
   top: 0;
   z-index: 100;
   height: 64px;
+  box-shadow: 0 2px 12px rgba(74, 63, 85, 0.25);
 }
 
 .ev-topbar-brand-text {
@@ -285,7 +288,7 @@ const isActive = (path) => {
 
 .ev-admin-info {
   font-size: 13px;
-  color: #fff;
+  color: rgba(255, 255, 255, 0.8);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -294,12 +297,13 @@ const isActive = (path) => {
 .ev-admin-avatar {
   width: 32px;
   height: 32px;
-  background: #D5AAFF;
+  background: linear-gradient(135deg, #D5AAFF, #FFB3C6);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  box-shadow: 0 2px 8px rgba(213, 170, 255, 0.4);
 }
 
 .ev-topbar-badge {
@@ -308,12 +312,13 @@ const isActive = (path) => {
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 8px;
+  font-weight: 700;
 }
 
 /* ── Main ── */
 .ev-main {
   flex: 1;
-  background: #F5F0FA;
+  background: var(--ev-bg-page);
   padding: 24px 28px;
   overflow-y: auto;
 }

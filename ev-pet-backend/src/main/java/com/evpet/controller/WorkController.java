@@ -2,7 +2,6 @@ package com.evpet.controller;
 
 import com.evpet.dto.WorkDTO;
 import com.evpet.service.WorkService;
-import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import com.evpet.vo.WorkVO;
 import lombok.RequiredArgsConstructor;
@@ -11,10 +10,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/work")
 @RequiredArgsConstructor
-public class WorkController {
+public class WorkController extends BaseController {
 
     private final WorkService workService;
-    private final JwtUtil jwtUtil;
 
     @GetMapping("/info")
     public ApiResponse<WorkVO> getWorkInfo(@RequestHeader("Authorization") String token) {
@@ -50,8 +48,4 @@ public class WorkController {
         }
     }
 
-    private Long getUserIdFromToken(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return jwtUtil.getUserIdFromToken(actualToken);
-    }
 }

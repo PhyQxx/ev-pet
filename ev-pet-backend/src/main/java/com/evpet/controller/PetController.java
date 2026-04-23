@@ -1,7 +1,6 @@
 package com.evpet.controller;
 
 import com.evpet.service.PetService;
-import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import com.evpet.vo.PetVO;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +9,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/pet")
 @RequiredArgsConstructor
-public class PetController {
+public class PetController extends BaseController {
 
     private final PetService petService;
-    private final JwtUtil jwtUtil;
 
     @GetMapping("/info")
     public ApiResponse<PetVO> getPetInfo(@RequestHeader("Authorization") String token) {
@@ -72,8 +70,4 @@ public class PetController {
         }
     }
 
-    private Long getUserIdFromToken(String token) {
-        String actualToken = token.replace("Bearer ", "");
-        return jwtUtil.getUserIdFromToken(actualToken);
-    }
 }

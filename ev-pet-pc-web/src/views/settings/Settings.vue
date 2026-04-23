@@ -1,8 +1,5 @@
 <template>
   <div class="settings-page">
-    <h1 class="page-title">设置</h1>
-    <p class="page-subtitle">管理你的账号、通知偏好和隐私设置</p>
-
     <div class="settings-layout">
       <!-- Left Nav -->
       <div class="settings-nav">

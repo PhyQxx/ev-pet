@@ -127,13 +127,10 @@ const pets = ref([
 .pet-id { font-size: 11px; color: #A898B8; }
 .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-size: 13px; color: #7A6B8A; }
 .page-btns { display: flex; gap: 6px; }
-.btn { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; border: none; }
-.btn-primary { background: linear-gradient(135deg, #FFB3C6, #D5AAFF); color: #fff; }
-.btn-outline { background: #fff; border: 1px solid #E8DFF0; color: #7A6B8A; }
-.btn-sm { padding: 5px 12px; font-size: 12px; background: #fff; border: 1px solid #E8DFF0; color: #7A6B8A; border-radius: 6px; }
-.badge { padding: 2px 8px; border-radius: 6px; font-size: 11px; }
-.badge-green { background: #E8F5EE; color: #3BAF5D; }
-.badge-yellow { background: #FFF8E5; color: #D4A000; }
-.badge-purple { background: #F5EEFF; color: #9B6DFF; }
-.action-link { color: #D5AAFF; cursor: pointer; font-size: 12px; margin-right: 6px; }
+/* badge/action overrides specific to Pets page */
+.badge { padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block; }
+.badge-green { background: #E8F5EE; color: #2DA44E; }
+.badge-yellow { background: #FFF8E6; color: #D4A000; }
+.badge-purple { background: #F5EEFF; color: #8B5CF6; }
+.action-link { color: #D5AAFF; cursor: pointer; font-size: 12px; margin-right: 6px; font-weight: 500; }
 </style>
