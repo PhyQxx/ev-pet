@@ -232,9 +232,16 @@ function getStatusClass(status) {
   return 'lock'
 }
 
-function onCardClick(item) {
+async function onCardClick(item) {
   if (item.status === 'in_progress' && item.claimable) {
-    uni.showToast({ title: '奖励已领取！', icon: 'success' })
+    try {
+      await achievement.claimReward(item.id)
+      uni.showToast({ title: '奖励已领取！', icon: 'success' })
+      item.status = 'done'
+      fetchAchievements()
+    } catch (e) {
+      uni.showToast({ title: '领取失败', icon: 'none' })
+    }
     return
   }
   if (item.status === 'locked') {

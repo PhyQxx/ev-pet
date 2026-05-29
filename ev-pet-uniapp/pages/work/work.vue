@@ -198,15 +198,16 @@
 </template>
 
 <script>
-import { work as workApi, pet as petApi } from '../../utils/api.js'
+import { work as workApi } from '@/utils/api.js'
+import { store } from '@/store/index.js'
 
 export default {
   data() {
     return {
+      store,
       currentTab: 'work',
       energy: 70,
       petMood: 92,
-      petInfo: null,
       workStatus: 'idle',
       workTimer: null,
       workSeconds: 0,
@@ -227,12 +228,11 @@ export default {
     }
   },
   computed: {
+    petInfo() { return this.store.petInfo },
     petEmoji() {
-      const stage = this.petInfo?.stage || 1
-      if (stage === 1) return '🐣'
-      if (stage === 2) return '🐥'
-      return '🦊'
-    }
+      return this.store.petEmoji
+    },
+    stageName() { return this.store.stageName }
   },
   onLoad() {
     const now = new Date()
@@ -247,12 +247,11 @@ export default {
   methods: {
     switchTab(tab) { this.currentTab = tab },
     loadData() {
-      petApi.getInfo().then(data => {
-        this.petInfo = data
-        this.energy = data.energy || data.health || 70
-        this.petMood = data.mood || 90
-        const names = { 1: '幼年期', 2: '成长期', 3: '完全体' }
-        this.stageName = names[data.stage] || '幼年期'
+      this.store.loadPetInfo().then(data => {
+        if (data) {
+          this.energy = data.energy || data.health || 70
+          this.petMood = data.mood || 90
+        }
       }).catch(() => {})
 
       workApi.getInfo().then(data => {

@@ -30,9 +30,11 @@ public class WorkController extends BaseController {
             @RequestParam Long workId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return workService.startWork(userId, workId);
+            return ApiResponse.success(workService.startWork(userId, workId));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("开始打工失败: " + e.getMessage());
+            return ApiResponse.error("开始打工失败");
         }
     }
 
@@ -42,9 +44,11 @@ public class WorkController extends BaseController {
             @RequestParam Long recordId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return workService.claimWorkReward(userId, recordId);
+            return ApiResponse.success(workService.claimWorkReward(userId, recordId));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("领取奖励失败: " + e.getMessage());
+            return ApiResponse.error("领取奖励失败");
         }
     }
 

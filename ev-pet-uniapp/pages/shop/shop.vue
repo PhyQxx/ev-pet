@@ -149,8 +149,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onShow } from 'vue'
-import { shop as shopApi, getUserInfo } from '../../utils/api.js'
+import { ref, computed, onMounted, onShow, onHide, onUnload } from 'vue'
+import { shop as shopApi, getUserInfo } from '@/utils/api.js'
 
 const statusBarHeight = ref(0)
 const userInfo = ref(null)
@@ -295,7 +295,13 @@ function buyDeal(deal) {
     content: `确定购买 ${deal.title} 吗？`,
     success: (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '购买成功！', icon: 'success' })
+        shopApi.buy(deal.id, 1)
+          .then(() => {
+            uni.showToast({ title: '购买成功！', icon: 'success' })
+          })
+          .catch(err => {
+            uni.showToast({ title: err.message || '购买失败', icon: 'none' })
+          })
       }
     }
   })
@@ -307,15 +313,23 @@ function buyPack(pack) {
     content: `确定购买 ${pack.name} 吗？`,
     success: (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '购买成功！', icon: 'success' })
+        shopApi.buy(pack.id, 1)
+          .then(() => {
+            uni.showToast({ title: '购买成功！', icon: 'success' })
+          })
+          .catch(err => {
+            uni.showToast({ title: err.message || '购买失败', icon: 'none' })
+          })
       }
     }
   })
 }
 
+const dealTimer = ref(null)
+
 function startCountdown() {
   let total = 23 * 60 + 41
-  setInterval(() => {
+  dealTimer.value = setInterval(() => {
     total--
     if (total < 0) total = 24 * 60
     const h = Math.floor(total / 60)
@@ -323,6 +337,20 @@ function startCountdown() {
     countdown.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
   }, 60000)
 }
+
+onHide(() => {
+  if (dealTimer.value) {
+    clearInterval(dealTimer.value)
+    dealTimer.value = null
+  }
+})
+
+onUnload(() => {
+  if (dealTimer.value) {
+    clearInterval(dealTimer.value)
+    dealTimer.value = null
+  }
+})
 </script>
 
 <style scoped>

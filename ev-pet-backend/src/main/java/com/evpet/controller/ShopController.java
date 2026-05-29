@@ -60,9 +60,11 @@ public class ShopController extends BaseController {
             @RequestParam(required = false, defaultValue = "1") Integer quantity) {
         try {
             Long userId = getUserIdFromToken(token);
-            return shopService.buyItem(userId, itemId, quantity);
+            return ApiResponse.success(shopService.buyItem(userId, itemId, quantity));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("购买失败: " + e.getMessage());
+            return ApiResponse.error("购买失败");
         }
     }
 
@@ -72,9 +74,11 @@ public class ShopController extends BaseController {
             @RequestParam Long itemId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return shopService.equipItem(userId, itemId);
+            return ApiResponse.success(shopService.equipItem(userId, itemId));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("穿戴失败: " + e.getMessage());
+            return ApiResponse.error("穿戴失败");
         }
     }
 
@@ -84,9 +88,11 @@ public class ShopController extends BaseController {
             @RequestParam Long itemId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return shopService.useItem(userId, itemId);
+            return ApiResponse.success(shopService.useItem(userId, itemId));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("使用道具失败: " + e.getMessage());
+            return ApiResponse.error("使用道具失败");
         }
     }
 

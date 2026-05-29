@@ -3,7 +3,6 @@ package com.evpet.service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.evpet.mapper.*;
 import com.evpet.model.*;
-import com.evpet.vo.ApiResponse;
 import com.evpet.vo.AchievementVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -74,34 +73,34 @@ public class AchievementService {
     }
 
     @Transactional
-    public ApiResponse<String> claimReward(Long userId, Long achievementId) {
+    public String claimReward(Long userId, Long achievementId) {
         UserAchievement ua = userAchievementMapper.selectOne(
             new LambdaQueryWrapper<UserAchievement>()
                 .eq(UserAchievement::getUserId, userId)
                 .eq(UserAchievement::getAchievementId, achievementId)
         );
-        
+
         if (ua == null) {
-            return ApiResponse.error("成就未完成，无法领取");
+            throw new IllegalArgumentException("成就未完成，无法领取");
         }
-        
+
         if (ua.getIsClaimed()) {
-            return ApiResponse.error("奖励已领取");
+            throw new IllegalStateException("奖励已领取");
         }
-        
+
         Achievement achievement = achievementMapper.selectById(achievementId);
-        
+
         // 领取奖励
         ua.setIsClaimed(true);
         ua.setClaimTime(java.time.LocalDateTime.now());
         userAchievementMapper.updateById(ua);
-        
+
         // 给用户加金币
         User user = userMapper.selectById(userId);
         user.setGold(user.getGold() + achievement.getRewardGold());
         userMapper.updateById(user);
-        
-        return ApiResponse.success("领取成功，获得" + achievement.getRewardGold() + "金币");
+
+        return "领取成功，获得" + achievement.getRewardGold() + "金币";
     }
 
     @Transactional

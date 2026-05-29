@@ -33,11 +33,19 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('adminToken')
-  if (to.path !== '/login' && !token) {
-    next('/login')
-  } else {
-    next()
+  if (to.path !== '/login') {
+    if (!token) {
+      next('/login')
+      return
+    }
+    // Reject mock tokens to enforce real authentication
+    if (token.startsWith('mock-')) {
+      localStorage.removeItem('adminToken')
+      next('/login')
+      return
+    }
   }
+  next()
 })
 
 export default router

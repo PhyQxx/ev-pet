@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
+
 
 @RestController
 @RequestMapping("/api/admin/config")
@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 public class ConfigController {
 
     private final SystemConfigService systemConfigService;
+    private final OkHttpClient okHttpClient;
 
     @GetMapping
     public ApiResponse<Map<String, String>> getAll() {
@@ -58,11 +59,6 @@ public class ConfigController {
                 return ApiResponse.error("AI API密钥未配置");
             }
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(10, TimeUnit.SECONDS)
-                    .readTimeout(10, TimeUnit.SECONDS)
-                    .build();
-
             String requestBody = String.format(
                     "{\"model\":\"%s\",\"messages\":[{\"role\":\"user\",\"content\":\"你好\"}],\"stream\":false}",
                     model
@@ -75,7 +71,7 @@ public class ConfigController {
                     .post(okhttp3.RequestBody.create(requestBody, MediaType.parse("application/json; charset=utf-8")))
                     .build();
 
-            try (Response response = client.newCall(request).execute()) {
+            try (Response response = okHttpClient.newCall(request).execute()) {
                 if (response.isSuccessful()) {
                     return ApiResponse.success("AI服务连接正常");
                 } else {

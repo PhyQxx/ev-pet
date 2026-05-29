@@ -39,6 +39,13 @@ export const auth = {
   }
 }
 
+// 管理员认证
+export const adminAuth = {
+  login(data) {
+    return api.post('/admin/login', data)
+  }
+}
+
 // ============ 后台管理 API ============
 
 // 统计概览

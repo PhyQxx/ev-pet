@@ -168,7 +168,8 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
+@use '@/styles/ev-pet.scss' as *;
 .achievement-page {
   padding: 0;
 }
@@ -192,7 +193,7 @@ onMounted(() => {
 .stats-header h3 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--text);
+  color: $ev-text;
   margin: 0;
 }
 
@@ -221,7 +222,7 @@ onMounted(() => {
 
 .big-label {
   font-size: 14px;
-  color: var(--text-secondary);
+  color: $ev-text-sec;
   margin-top: 4px;
 }
 
@@ -229,7 +230,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: $ev-text-sec;
 }
 
 .reward-summary {
@@ -238,18 +239,18 @@ onMounted(() => {
   align-items: center;
   padding: 14px 16px;
   background: linear-gradient(135deg, rgba(255, 179, 198, 0.15), rgba(213, 170, 255, 0.15));
-  border-radius: var(--radius-sm);
+  border-radius: $ev-radius-sm;
   margin-top: 8px;
 }
 
 .reward-label {
   font-size: 13px;
-  color: var(--text-secondary);
+  color: $ev-text-sec;
 }
 
 .reward-value {
   font-weight: 600;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .achievements-card {
@@ -289,14 +290,14 @@ onMounted(() => {
   gap: 16px;
   padding: 20px;
   background: #FAF8FF;
-  border-radius: var(--radius);
+  border-radius: $ev-radius;
   border: 1px solid transparent;
   transition: all 0.2s;
 }
 
 .achievement-card:hover {
-  border-color: var(--primary);
-  box-shadow: var(--shadow);
+  border-color: $ev-primary;
+  box-shadow: $ev-shadow;
 }
 
 .achievement-card.completed {
@@ -316,7 +317,7 @@ onMounted(() => {
   width: 60px;
   height: 60px;
   background: linear-gradient(135deg, #FFE5A0, #FFD166);
-  border-radius: var(--radius);
+  border-radius: $ev-radius;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,12 +354,12 @@ onMounted(() => {
   font-size: 15px;
   font-weight: 600;
   margin: 0 0 4px 0;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .achievement-desc {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: $ev-text-sec;
   margin: 0 0 10px 0;
 }
 
@@ -374,7 +375,7 @@ onMounted(() => {
 
 .progress-text {
   font-size: 11px;
-  color: var(--text-muted);
+  color: $ev-text-muted;
   white-space: nowrap;
 }
 
@@ -398,7 +399,7 @@ onMounted(() => {
 .coin-num {
   font-weight: 600;
   font-size: 14px;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .claim-btn {
@@ -407,7 +408,7 @@ onMounted(() => {
   color: white !important;
   font-weight: 600;
   padding: 6px 16px;
-  border-radius: var(--radius-sm);
+  border-radius: $ev-radius-sm;
 }
 
 .claim-btn:hover {
@@ -422,6 +423,6 @@ onMounted(() => {
 
 .ongoing-hint {
   font-size: 12px;
-  color: var(--text-muted);
+  color: $ev-text-muted;
 }
 </style>

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,8 @@ public class SystemConfigService {
         }
 
         // 写入缓存
-        redisTemplate.opsForValue().set(CACHE_PREFIX + key, config.getConfigValue());
+        redisTemplate.opsForValue().set(CACHE_PREFIX + key, config.getConfigValue(),
+                Duration.ofHours(CACHE_TTL_HOURS));
         return config.getConfigValue();
     }
 
@@ -78,7 +80,8 @@ public class SystemConfigService {
             systemConfigMapper.insert(config);
         }
         // 更新缓存
-        redisTemplate.opsForValue().set(CACHE_PREFIX + key, value);
+        redisTemplate.opsForValue().set(CACHE_PREFIX + key, value,
+                Duration.ofHours(CACHE_TTL_HOURS));
     }
 
     public void batchSave(Map<String, String> configMap) {

@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import { auth, setToken, setUserInfo } from '../../utils/api.js'
+import { auth, setToken, setUserInfo } from '@/utils/api.js'
 
 export default {
   data() {

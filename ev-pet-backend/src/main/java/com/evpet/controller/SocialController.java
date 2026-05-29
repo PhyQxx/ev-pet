@@ -6,6 +6,9 @@ import com.evpet.vo.SocialVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/social")
 @RequiredArgsConstructor
@@ -50,9 +53,11 @@ public class SocialController extends BaseController {
             @RequestParam Long friendId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return socialService.addFriend(userId, friendId);
+            return ApiResponse.success(socialService.addFriend(userId, friendId));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("添加好友失败: " + e.getMessage());
+            return ApiResponse.error("添加好友失败");
         }
     }
 
@@ -62,9 +67,11 @@ public class SocialController extends BaseController {
             @RequestParam Long requestId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return socialService.acceptFriend(userId, requestId);
+            return ApiResponse.success(socialService.acceptFriend(userId, requestId));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("接受好友请求失败: " + e.getMessage());
+            return ApiResponse.error("接受好友请求失败");
         }
     }
 
@@ -74,9 +81,11 @@ public class SocialController extends BaseController {
             @RequestParam Long requestId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return socialService.rejectFriend(userId, requestId);
+            return ApiResponse.success(socialService.rejectFriend(userId, requestId));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("拒绝好友请求失败: " + e.getMessage());
+            return ApiResponse.error("拒绝好友请求失败");
         }
     }
 
@@ -86,9 +95,9 @@ public class SocialController extends BaseController {
             @RequestParam String content) {
         try {
             Long userId = getUserIdFromToken(token);
-            return socialService.publishPost(userId, content);
+            return ApiResponse.success(socialService.publishPost(userId, content));
         } catch (Exception e) {
-            return ApiResponse.error("发布动态失败: " + e.getMessage());
+            return ApiResponse.error("发布动态失败");
         }
     }
 
@@ -98,9 +107,35 @@ public class SocialController extends BaseController {
             @RequestParam Long postId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return socialService.likePost(userId, postId);
+            return ApiResponse.success(socialService.likePost(userId, postId));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("点赞失败: " + e.getMessage());
+            return ApiResponse.error("点赞失败");
+        }
+    }
+
+    @PostMapping("/post/comment")
+    public ApiResponse<String> addComment(
+            @RequestHeader("Authorization") String token,
+            @RequestParam Long postId,
+            @RequestParam String content) {
+        try {
+            Long userId = getUserIdFromToken(token);
+            return ApiResponse.success(socialService.addComment(userId, postId, content));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
+        } catch (Exception e) {
+            return ApiResponse.error("评论失败");
+        }
+    }
+
+    @GetMapping("/post/comments")
+    public ApiResponse<List<Map<String, Object>>> getComments(@RequestParam Long postId) {
+        try {
+            return ApiResponse.success(socialService.getComments(postId));
+        } catch (Exception e) {
+            return ApiResponse.error("获取评论失败");
         }
     }
 

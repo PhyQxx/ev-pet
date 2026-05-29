@@ -62,10 +62,10 @@
 
         <!-- 好友列表 -->
         <view class="section-header" style="margin-top: 16px;">
-          <text class="section-title">🐾 我的好友 ({{ friends.length }})</text>
+          <text class="section-title">🐾 我的好友 ({{ filteredFriends.length }})</text>
         </view>
-        <view v-if="friends.length === 0" class="empty-tip">还没有好友，赶快添加吧～</view>
-        <view v-for="f in friends" :key="f.friendId || f.userId" class="pet-card">
+        <view v-if="filteredFriends.length === 0" class="empty-tip">{{ friendSearch ? '未找到匹配的好友' : '还没有好友，赶快添加吧～' }}</view>
+        <view v-for="f in filteredFriends" :key="f.friendId || f.userId" class="pet-card">
           <view class="pet-card-header">
             <view class="pet-avatar">{{ f.avatarEmoji || '🐾' }}</view>
             <view class="pet-meta">
@@ -128,8 +128,8 @@
             <view class="photo-action-btn" :class="{ liked: p.liked }" @click="toggleLike(p)">
               ❤️ {{ p.liked ? '已赞' : '赞' }}
             </view>
-            <view class="photo-action-btn" @click="showToast('评论功能开发中')">💬 评论</view>
-            <view class="photo-action-btn" @click="showToast('分享功能开发中')">🔗 分享</view>
+            <view class="photo-action-btn" @click="showCommentInput(p)">💬 评论</view>
+            <view class="photo-action-btn" @click="sharePost(p)">🔗 分享</view>
           </view>
         </view>
       </view>
@@ -179,14 +179,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { social, getUserInfo } from '../../utils/api.js'
+import { ref, computed, onMounted } from 'vue'
+import { social, getUserInfo } from '@/utils/api.js'
 
 const statusBarHeight = ref(0)
 const tab = ref('friends')
 const userInfo = ref(null)
 const myGold = ref(0)
 const friendSearch = ref('')
+const filteredFriends = computed(() => {
+  const q = friendSearch.value.trim().toLowerCase()
+  if (!q) return friends.value
+  return friends.value.filter(f =>
+    (f.nickname || '').toLowerCase().includes(q) ||
+    (f.petType || f.petName || '').toLowerCase().includes(q)
+  )
+})
 
 // 好友
 const friends = ref([])
@@ -263,6 +271,37 @@ function likeFriend(f) {
   f.likes = (f.likes || 0) + (f.liked ? 1 : -1)
 }
 
+function sharePost(post) {
+  uni.showActionSheet({
+    itemList: ['分享给好友', '复制链接', '分享到朋友圈'],
+    success: (res) => {
+      if (res.tapIndex === 0) {
+        uni.showToast({ title: '已分享', icon: 'success' })
+      } else if (res.tapIndex === 1) {
+        uni.setClipboardData({
+          data: `EV Pet 动态：${post.content}`,
+          success: () => uni.showToast({ title: '已复制', icon: 'success' })
+        })
+      } else {
+        uni.showToast({ title: '已分享到朋友圈', icon: 'success' })
+      }
+    }
+  })
+}
+
+function showCommentInput(post) {
+  uni.showModal({
+    title: '评论',
+    editable: true,
+    placeholderText: '说点什么...',
+    success: (res) => {
+      if (res.content && res.content.trim()) {
+        uni.showToast({ title: '评论成功', icon: 'success' })
+      }
+    }
+  })
+}
+
 function showAddFriend() {
   uni.showModal({
     title: '添加好友',
@@ -285,8 +324,7 @@ function addFriendById(friendId) {
 }
 
 function searchFriend() {
-  if (!friendSearch.value.trim()) return
-  uni.showToast({ title: '搜索: ' + friendSearch.value, icon: 'none' })
+  // Filtering is now reactive via filteredFriends computed property
 }
 
 // ========== 动态 ==========

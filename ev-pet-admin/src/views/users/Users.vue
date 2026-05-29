@@ -167,6 +167,7 @@ const loadUsers = async () => {
     }
     if (keyword.value) params.keyword = keyword.value
     if (statusFilter.value) params.status = statusFilter.value
+    if (typeFilter.value) params.type = typeFilter.value
     const res = await userAdmin.list(params)
     if (res.code === 200 && res.data) {
       users.value = (res.data.list || []).map(u => ({

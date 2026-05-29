@@ -1,13 +1,13 @@
 package com.evpet.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evpet.mapper.PetMapper;
 import com.evpet.mapper.UserMapper;
 import com.evpet.mapper.WorkRecordMapper;
 import com.evpet.model.Pet;
 import com.evpet.model.User;
 import com.evpet.model.WorkRecord;
-import com.evpet.vo.ApiResponse;
 import com.evpet.vo.WorkVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ public class WorkService {
     private final WorkRecordMapper workRecordMapper;
     private final UserMapper userMapper;
     private final PetMapper petMapper;
+    private final AchievementService achievementService;
 
     // 打工配置
     private static final List<WorkVO.WorkItemVO> WORK_TEMPLATES = List.of(
@@ -49,7 +50,7 @@ public class WorkService {
         
         for (WorkVO.WorkItemVO work : works) {
             for (WorkRecord record : ongoing) {
-                if (work.getId().equals(record.getId())) {
+                if (work.getName().equals(record.getWorkName())) {
                     work.setStatus("ongoing");
                     long remaining = java.time.Duration.between(LocalDateTime.now(), record.getEndTime()).getSeconds();
                     work.setRemainingTime(Math.max(0, remaining));
@@ -58,13 +59,13 @@ public class WorkService {
         }
         
         // 获取打工记录
-        List<WorkRecord> records = workRecordMapper.selectList(
+        List<WorkRecord> records = workRecordMapper.selectPage(
+            new Page<>(1, 10),
             new LambdaQueryWrapper<WorkRecord>()
                 .eq(WorkRecord::getUserId, userId)
                 .eq(WorkRecord::getStatus, "completed")
                 .orderByDesc(WorkRecord::getCreateTime)
-                .last("LIMIT 10")
-        );
+        ).getRecords();
         
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         List<WorkVO.WorkRecordVO> recordVOs = records.stream().map(r -> 
@@ -108,24 +109,24 @@ public class WorkService {
     }
 
     @Transactional
-    public ApiResponse<String> startWork(Long userId, Long workId) {
+    public String startWork(Long userId, Long workId) {
         WorkVO.WorkItemVO workTemplate = WORK_TEMPLATES.stream()
             .filter(w -> w.getId().equals(workId))
             .findFirst()
             .orElse(null);
-        
+
         if (workTemplate == null) {
-            return ApiResponse.error("打工任务不存在");
+            throw new IllegalArgumentException("打工任务不存在");
         }
-        
+
         Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, userId));
         if (pet == null) {
-            return ApiResponse.error("宠物不存在");
+            throw new IllegalArgumentException("宠物不存在");
         }
-        
+
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime endTime = startTime.plusMinutes(workTemplate.getDuration());
-        
+
         WorkRecord record = new WorkRecord();
         record.setUserId(userId);
         record.setPetId(pet.getId());
@@ -138,49 +139,49 @@ public class WorkService {
         record.setStatus("ongoing");
         record.setCreateTime(LocalDateTime.now());
         workRecordMapper.insert(record);
-        
-        return ApiResponse.success("开始打工：" + workTemplate.getName());
+
+        return "开始打工：" + workTemplate.getName();
     }
 
     @Transactional
-    public ApiResponse<WorkVO.WorkStatsVO> claimWorkReward(Long userId, Long recordId) {
+    public WorkVO.WorkStatsVO claimWorkReward(Long userId, Long recordId) {
         WorkRecord record = workRecordMapper.selectOne(
             new LambdaQueryWrapper<WorkRecord>()
                 .eq(WorkRecord::getId, recordId)
                 .eq(WorkRecord::getUserId, userId)
                 .eq(WorkRecord::getStatus, "ongoing")
         );
-        
+
         if (record == null) {
-            return ApiResponse.error("打工记录不存在或已完成");
+            throw new IllegalArgumentException("打工记录不存在或已完成");
         }
-        
+
         // 检查是否到时间
         if (LocalDateTime.now().isBefore(record.getEndTime())) {
-            return ApiResponse.error("打工尚未完成");
+            throw new IllegalStateException("打工尚未完成");
         }
-        
+
         // 标记完成
         record.setStatus("completed");
         workRecordMapper.updateById(record);
-        
+
         // 给用户加金币和经验
         User user = userMapper.selectById(userId);
         user.setGold(user.getGold() + record.getEarnings());
         user.setExp(user.getExp() + record.getExp());
         userMapper.updateById(user);
-        
+
         // 给宠物加经验
         Pet pet = petMapper.selectById(record.getPetId());
         pet.setExp(pet.getExp() + record.getExp());
         pet.setUpdateTime(LocalDateTime.now());
         petMapper.updateById(pet);
-        
+
+        // 触发成就检查（等级和阶段）
+        achievementService.checkAndGrantAchievement(userId, 3, pet.getLevel());
+        achievementService.checkAndGrantAchievement(userId, 4, pet.getStage());
+
         WorkVO workInfo = getWorkInfo(userId);
-        return ApiResponse.<WorkVO.WorkStatsVO>builder()
-            .code(200)
-            .message("领取成功，获得" + record.getEarnings() + "金币")
-            .data(workInfo.getStats())
-            .build();
+        return workInfo.getStats();
     }
 }

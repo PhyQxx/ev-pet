@@ -11,7 +11,7 @@
       </view>
       <view class="header-right">
         <button class="icon-btn" @click="toAchievement">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <text style="font-size:18px;">🔔</text>
         </button>
         <view class="icon-btn coin-btn">
           <text style="font-size:14px;">💰</text>
@@ -161,13 +161,13 @@
 </template>
 
 <script>
-import { pet as petApi, getUserInfo } from '../../utils/api.js'
+import { pet as petApi } from '@/utils/api.js'
+import { store } from '@/store/index.js'
 
 export default {
   data() {
     return {
-      userInfo: null,
-      petInfo: null,
+      store,
       timer: null,
       actionVisible: false,
       actionTitle: '',
@@ -192,12 +192,15 @@ export default {
     }
   },
   computed: {
+    petInfo() { return this.store.petInfo },
+    userInfo() { return this.store.userInfo },
+    stageName() { return this.store.stageName },
     completedCount() {
       return this.quests.filter(q => q.done).length
     },
     petEmoji() {
-      const stage = this.petInfo?.stage || 1
-      const status = this.petInfo?.status || 'happy'
+      const stage = this.store.petInfo?.stage || 1
+      const status = this.store.petInfo?.status || 'happy'
       if (status === 'hungry') return '🥺'
       if (status === 'tired') return '😴'
       if (status === 'angry') return '😠'
@@ -208,7 +211,7 @@ export default {
       return '🦊'
     },
     petStatusClass() {
-      const status = this.petInfo?.status || 'happy'
+      const status = this.store.petInfo?.status || 'happy'
       return 'status-' + status
     },
     moodText() {
@@ -219,33 +222,31 @@ export default {
       return '不太开心'
     },
     health() {
-      return this.petInfo?.health || 0
+      return this.store.health
     },
     fullness() {
-      return this.petInfo?.fullness || 0
+      return this.store.fullness
     },
     petMood() {
-      return this.petInfo?.mood || 0
+      return this.store.mood
     }
   },
-  onLoad() {
-    this.userInfo = getUserInfo()
-  },
   onShow() {
-    this.loadPetInfo()
-    this.timer = setInterval(() => this.loadPetInfo(), 30000)
+    this.store.init()
+    this.timer = setInterval(() => this.store.loadPetInfo(), 30000)
   },
   onHide() {
     if (this.timer) clearInterval(this.timer)
   },
+  onUnload() {
+    if (this.timer) {
+      clearInterval(this.timer)
+      this.timer = null
+    }
+  },
   methods: {
     loadPetInfo() {
-      petApi.getInfo().then(data => {
-        this.petInfo = data
-        const stage = data.stage || 1
-        const names = { 1: '幼年期', 2: '成长期', 3: '完全体' }
-        this.stageName = names[stage] || '幼年期'
-      }).catch(() => {})
+      this.store.loadPetInfo()
     },
     doAction(type) {
       const configs = {

@@ -322,6 +322,7 @@ const showReward = ref(false)
 const rewardJob = ref(null)
 
 const currentWork = ref(null)
+const currentRecordId = ref(null)
 const remainingTime = ref(0)
 const workProgress = ref(0)
 let workTimer = null
@@ -408,6 +409,7 @@ const loadWorkInfo = async () => {
       // 如果有进行中的工作，恢复计时器
       if (d.currentWork) {
         currentWork.value = jobs.value.find(j => j.id === d.currentWork.workId) || null
+        currentRecordId.value = d.currentWork.recordId || null
         remainingTime.value = d.currentWork.remainingSeconds || 0
         const totalTime = currentWork.value ? currentWork.value.duration * 60 : 0
         workProgress.value = totalTime > 0 ? ((totalTime - remainingTime.value) / totalTime) * 100 : 0
@@ -466,9 +468,12 @@ const startJob = async (job) => {
   }
   showModal.value = false
   try {
-    await workApi.start(job.id)
+    const res = await workApi.start(job.id)
+    currentRecordId.value = res?.recordId || null
   } catch (e) {
     console.error('开始打工失败', e)
+    ElMessage.error('开始打工失败')
+    return
   }
   currentWork.value = job
   remainingTime.value = job.duration * 60
@@ -483,10 +488,12 @@ const completeWork = async (job) => {
   rewardJob.value = job
   showReward.value = true
   try {
-    // 调用后端领奖接口
-    // await workApi.claim(recordId)
+    await workApi.claim(currentRecordId.value)
   } catch (e) {
     console.error('领取奖励失败', e)
+    ElMessage.error('领取奖励失败')
+  } finally {
+    currentRecordId.value = null
   }
   workStats.value.todayEarnings += job.earnings
   workStats.value.totalEarnings += job.earnings
@@ -526,6 +533,7 @@ const cancelWork = async () => {
     status: 'cancelled'
   })
   currentWork.value = null
+  currentRecordId.value = null
   ElMessage.info('已取消打工，无奖励')
 }
 

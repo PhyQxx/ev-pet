@@ -67,7 +67,8 @@ const routes = [
         component: () => import('../views/social/Social.vue')
       }
     ]
-  }
+  },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: () => import('../views/NotFound.vue') }
 ]
 
 const router = createRouter({

@@ -1,11 +1,12 @@
 package com.evpet.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evpet.mapper.*;
 import com.evpet.model.*;
-import com.evpet.vo.ApiResponse;
 import com.evpet.vo.SocialVO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +26,8 @@ public class SocialService {
     private final PostMapper postMapper;
     private final UserMapper userMapper;
     private final PetMapper petMapper;
+    private final CommentMapper commentMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
     public SocialVO getFriends(Long userId) {
         // 获取好友列表
@@ -30,11 +36,21 @@ public class SocialService {
                 .eq(Friend::getUserId, userId)
                 .eq(Friend::getStatus, "accepted")
         );
-        
+
+        // 批量查询好友的用户信息和宠物信息
+        List<Long> friendIds = friends.stream().map(Friend::getFriendId).collect(Collectors.toList());
+        Map<Long, User> friendUserMap = friendIds.isEmpty()
+            ? Map.of()
+            : userMapper.selectBatchIds(friendIds).stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<Long, Pet> friendPetMap = friendIds.isEmpty()
+            ? Map.of()
+            : petMapper.selectList(new LambdaQueryWrapper<Pet>().in(Pet::getUserId, friendIds))
+                .stream().collect(Collectors.toMap(Pet::getUserId, Function.identity()));
+
         List<SocialVO.FriendVO> friendVOs = new ArrayList<>();
         for (Friend f : friends) {
-            User friend = userMapper.selectById(f.getFriendId());
-            Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, f.getFriendId()));
+            User friend = friendUserMap.get(f.getFriendId());
+            Pet pet = friendPetMap.get(f.getFriendId());
             if (friend != null) {
                 friendVOs.add(SocialVO.FriendVO.builder()
                     .id(f.getId())
@@ -48,19 +64,29 @@ public class SocialService {
                     .build());
             }
         }
-        
+
         // 获取好友请求
         List<Friend> requests = friendMapper.selectList(
             new LambdaQueryWrapper<Friend>()
                 .eq(Friend::getFriendId, userId)
                 .eq(Friend::getStatus, "pending")
         );
-        
+
+        // 批量查询请求用户的用户信息和宠物信息
+        List<Long> requesterIds = requests.stream().map(Friend::getUserId).collect(Collectors.toList());
+        Map<Long, User> requesterUserMap = requesterIds.isEmpty()
+            ? Map.of()
+            : userMapper.selectBatchIds(requesterIds).stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<Long, Pet> requesterPetMap = requesterIds.isEmpty()
+            ? Map.of()
+            : petMapper.selectList(new LambdaQueryWrapper<Pet>().in(Pet::getUserId, requesterIds))
+                .stream().collect(Collectors.toMap(Pet::getUserId, Function.identity()));
+
         List<SocialVO.FriendRequestVO> requestVOs = new ArrayList<>();
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         for (Friend r : requests) {
-            User user = userMapper.selectById(r.getUserId());
-            Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, r.getUserId()));
+            User user = requesterUserMap.get(r.getUserId());
+            Pet pet = requesterPetMap.get(r.getUserId());
             if (user != null) {
                 requestVOs.add(SocialVO.FriendRequestVO.builder()
                     .id(r.getId())
@@ -72,7 +98,7 @@ public class SocialService {
                     .build());
             }
         }
-        
+
         return SocialVO.builder()
             .friends(friendVOs)
             .friendRequests(requestVOs)
@@ -81,19 +107,29 @@ public class SocialService {
 
     public SocialVO getPosts(Long userId, String filter) {
         LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Post::getStatus, "approved").orderByDesc(Post::getCreateTime).last("LIMIT 50");
-        
+        wrapper.eq(Post::getStatus, "approved").orderByDesc(Post::getCreateTime);
+
         if ("hot".equals(filter)) {
             wrapper.orderByDesc(Post::getLikes);
         }
-        
-        List<Post> posts = postMapper.selectList(wrapper);
+
+        List<Post> posts = postMapper.selectPage(new Page<>(1, 50), wrapper).getRecords();
+
+        // 批量查询发帖用户的用户信息和宠物信息
+        List<Long> postUserIds = posts.stream().map(Post::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, User> userMap = postUserIds.isEmpty()
+            ? Map.of()
+            : userMapper.selectBatchIds(postUserIds).stream().collect(Collectors.toMap(User::getId, Function.identity()));
+        Map<Long, Pet> petMap = postUserIds.isEmpty()
+            ? Map.of()
+            : petMapper.selectList(new LambdaQueryWrapper<Pet>().in(Pet::getUserId, postUserIds))
+                .stream().collect(Collectors.toMap(Pet::getUserId, Function.identity()));
+
         List<SocialVO.PostVO> postVOs = new ArrayList<>();
-        
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
         for (Post p : posts) {
-            User user = userMapper.selectById(p.getUserId());
-            Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, p.getUserId()));
+            User user = userMap.get(p.getUserId());
+            Pet pet = petMap.get(p.getUserId());
             if (user != null) {
                 postVOs.add(SocialVO.PostVO.builder()
                     .id(p.getId())
@@ -110,24 +146,32 @@ public class SocialService {
                     .build());
             }
         }
-        
+
         return SocialVO.builder().posts(postVOs).build();
     }
 
     public SocialVO getRankings(String type) {
-        List<User> users = userMapper.selectList(null);
+        // 使用 Page 在数据库层排序并只取前20条
+        Page<User> page = new Page<>(1, 20);
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        if ("gold".equals(type)) {
+            wrapper.orderByDesc(User::getGold);
+        } else {
+            wrapper.orderByDesc(User::getLevel).orderByDesc(User::getExp);
+        }
+        List<User> users = userMapper.selectPage(page, wrapper).getRecords();
+
+        // 批量查询宠物信息
+        List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
+        Map<Long, Pet> petMap = userIds.isEmpty()
+            ? Map.of()
+            : petMapper.selectList(new LambdaQueryWrapper<Pet>().in(Pet::getUserId, userIds))
+                .stream().collect(Collectors.toMap(Pet::getUserId, Function.identity()));
+
         List<SocialVO.RankVO> ranks = new ArrayList<>();
-        
-        users.sort((a, b) -> {
-            if ("gold".equals(type)) {
-                return b.getGold() - a.getGold();
-            }
-            return b.getLevel() - a.getLevel();
-        });
-        
         int rank = 1;
         for (User u : users) {
-            Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>().eq(Pet::getUserId, u.getId()));
+            Pet pet = petMap.get(u.getId());
             String value = "gold".equals(type) ? u.getGold() + "金币" : "Lv." + u.getLevel();
             ranks.add(SocialVO.RankVO.builder()
                 .rank(rank++)
@@ -138,25 +182,29 @@ public class SocialService {
                 .petStage(pet != null ? pet.getStage() : 1)
                 .value(value)
                 .build());
-            if (rank > 20) break;
         }
-        
+
         return SocialVO.builder().rankings(ranks).build();
     }
 
     @Transactional
-    public ApiResponse<String> addFriend(Long userId, Long friendId) {
+    public String addFriend(Long userId, Long friendId) {
+        // Check for self-add
+        if (userId.equals(friendId)) {
+            throw new IllegalArgumentException("不能添加自己为好友");
+        }
+
         // 检查是否已经是好友
         Friend existing = friendMapper.selectOne(
             new LambdaQueryWrapper<Friend>()
                 .eq(Friend::getUserId, userId)
                 .eq(Friend::getFriendId, friendId)
         );
-        
+
         if (existing != null) {
-            return ApiResponse.error("已经是好友或已发送请求");
+            throw new IllegalStateException("已经是好友或已发送请求");
         }
-        
+
         Friend friend = new Friend();
         friend.setUserId(userId);
         friend.setFriendId(friendId);
@@ -164,21 +212,21 @@ public class SocialService {
         friend.setCreateTime(LocalDateTime.now());
         friend.setUpdateTime(LocalDateTime.now());
         friendMapper.insert(friend);
-        
-        return ApiResponse.success("好友请求已发送");
+
+        return "好友请求已发送";
     }
 
     @Transactional
-    public ApiResponse<String> acceptFriend(Long userId, Long requestId) {
+    public String acceptFriend(Long userId, Long requestId) {
         Friend request = friendMapper.selectById(requestId);
         if (request == null || !request.getFriendId().equals(userId)) {
-            return ApiResponse.error("请求不存在");
+            throw new IllegalArgumentException("请求不存在");
         }
-        
+
         request.setStatus("accepted");
         request.setUpdateTime(LocalDateTime.now());
         friendMapper.updateById(request);
-        
+
         // 双向添加好友
         Friend reverse = new Friend();
         reverse.setUserId(userId);
@@ -187,26 +235,26 @@ public class SocialService {
         reverse.setCreateTime(LocalDateTime.now());
         reverse.setUpdateTime(LocalDateTime.now());
         friendMapper.insert(reverse);
-        
-        return ApiResponse.success("已接受好友请求");
+
+        return "已接受好友请求";
     }
 
     @Transactional
-    public ApiResponse<String> rejectFriend(Long userId, Long requestId) {
+    public String rejectFriend(Long userId, Long requestId) {
         Friend request = friendMapper.selectById(requestId);
         if (request == null || !request.getFriendId().equals(userId)) {
-            return ApiResponse.error("请求不存在");
+            throw new IllegalArgumentException("请求不存在");
         }
-        
+
         request.setStatus("rejected");
         request.setUpdateTime(LocalDateTime.now());
         friendMapper.updateById(request);
-        
-        return ApiResponse.success("已拒绝好友请求");
+
+        return "已拒绝好友请求";
     }
 
     @Transactional
-    public ApiResponse<String> publishPost(Long userId, String content) {
+    public String publishPost(Long userId, String content) {
         Post post = new Post();
         post.setUserId(userId);
         post.setContent(content);
@@ -216,21 +264,75 @@ public class SocialService {
         post.setCreateTime(LocalDateTime.now());
         post.setUpdateTime(LocalDateTime.now());
         postMapper.insert(post);
-        
-        return ApiResponse.success("发布成功");
+
+        return "发布成功";
     }
 
     @Transactional
-    public ApiResponse<String> likePost(Long userId, Long postId) {
+    public String likePost(Long userId, Long postId) {
         Post post = postMapper.selectById(postId);
         if (post == null) {
-            return ApiResponse.error("动态不存在");
+            throw new IllegalArgumentException("动态不存在");
         }
-        
+
+        String likeKey = "post:like:" + postId + ":" + userId;
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(likeKey))) {
+            throw new IllegalStateException("已经点赞过了");
+        }
+
+        stringRedisTemplate.opsForValue().set(likeKey, "1");
         post.setLikes(post.getLikes() + 1);
         postMapper.updateById(post);
-        
-        return ApiResponse.success("点赞成功");
+
+        return "点赞成功";
+    }
+
+    @Transactional
+    public String addComment(Long userId, Long postId, String content) {
+        Post post = postMapper.selectById(postId);
+        if (post == null) {
+            throw new IllegalArgumentException("动态不存在");
+        }
+
+        Comment comment = new Comment();
+        comment.setPostId(postId);
+        comment.setUserId(userId);
+        comment.setContent(content);
+        comment.setCreateTime(LocalDateTime.now());
+        commentMapper.insert(comment);
+
+        post.setComments(post.getComments() + 1);
+        postMapper.updateById(post);
+
+        return "评论成功";
+    }
+
+    public List<Map<String, Object>> getComments(Long postId) {
+        List<Comment> comments = commentMapper.selectList(
+            new LambdaQueryWrapper<Comment>()
+                .eq(Comment::getPostId, postId)
+                .orderByDesc(Comment::getCreateTime)
+        );
+
+        List<Long> userIds = comments.stream().map(Comment::getUserId).distinct().collect(Collectors.toList());
+        Map<Long, User> userMap = userIds.isEmpty()
+            ? Map.of()
+            : userMapper.selectBatchIds(userIds).stream().collect(Collectors.toMap(User::getId, Function.identity()));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        for (Comment c : comments) {
+            User user = userMap.get(c.getUserId());
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", c.getId());
+            m.put("userId", c.getUserId());
+            m.put("nickname", user != null ? user.getNickname() : "匿名");
+            m.put("avatar", user != null ? user.getAvatar() : null);
+            m.put("content", c.getContent());
+            m.put("createTime", c.getCreateTime() != null ? c.getCreateTime().format(fmt) : "");
+            result.add(m);
+        }
+        return result;
     }
 
     private String getPetEmoji(int stage) {

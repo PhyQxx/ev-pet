@@ -46,6 +46,9 @@ export const auth = {
   },
   verify() {
     return api.get('/auth/verify')
+  },
+  deleteAccount() {
+    return api.delete('/auth/account')
   }
 }
 
@@ -90,7 +93,9 @@ export const social = {
   acceptFriend(requestId) { return api.post('/social/friend/accept', null, { params: { requestId } }) },
   rejectFriend(requestId) { return api.post('/social/friend/reject', null, { params: { requestId } }) },
   publishPost(content) { return api.post('/social/post/publish', null, { params: { content } }) },
-  likePost(postId) { return api.post('/social/post/like', null, { params: { postId } }) }
+  likePost(postId) { return api.post('/social/post/like', null, { params: { postId } }) },
+  addComment(postId, content) { return api.post('/social/post/comment', null, { params: { postId, content } }) },
+  getComments(postId) { return api.get('/social/post/comments', { params: { postId } }) }
 }
 
 // 成就

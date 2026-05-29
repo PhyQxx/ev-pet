@@ -133,30 +133,29 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { pet as petApi, getUserInfo, getToken, removeToken } from '../../utils/api.js'
+import { getToken, removeToken } from '@/utils/api.js'
+import { store } from '@/store/index.js'
 
-const userInfo = ref(null)
-const petInfo = ref(null)
+const userInfo = computed(() => store.userInfo)
+const petInfo = computed(() => store.petInfo)
 const achievementsCount = ref(8)
 const consecutiveDays = ref(7)
 
 const avatarEmoji = computed(() => {
-  const names = userInfo.value?.nickname || ''
+  const names = store.userInfo?.nickname || ''
   return names.charAt(0) || '我'
 })
 
 const petEmoji = computed(() => {
-  const stage = petInfo.value?.stage || 1
-  return stage === 1 ? '🐣' : stage === 2 ? '🐥' : '🐦'
+  return store.petEmoji
 })
 
 const petStageName = computed(() => {
-  const stage = petInfo.value?.stage || 1
-  return stage === 1 ? '幼年期' : stage === 2 ? '成长期' : '完全体'
+  return store.stageName
 })
 
 const statusText = computed(() => {
-  const status = petInfo.value?.status
+  const status = store.petInfo?.status
   if (status === 'happy') return '心情很好~'
   if (status === 'hungry') return '肚子饿了'
   if (status === 'tired') return '有点累'
@@ -165,7 +164,7 @@ const statusText = computed(() => {
 })
 
 const petStatusColor = computed(() => {
-  const status = petInfo.value?.status
+  const status = store.petInfo?.status
   if (status === 'happy') return 'dot-happy'
   if (status === 'hungry') return 'dot-hungry'
   if (status === 'tired') return 'dot-tired'
@@ -173,8 +172,8 @@ const petStatusColor = computed(() => {
 })
 
 const expPercent = computed(() => {
-  const exp = userInfo.value?.exp || 0
-  const level = userInfo.value?.level || 1
+  const exp = store.userInfo?.exp || 0
+  const level = store.userInfo?.level || 1
   const currentLevelExp = (level - 1) * 100
   const nextLevelExp = level * 100
   const progress = ((exp - currentLevelExp) / (nextLevelExp - currentLevelExp)) * 100
@@ -182,21 +181,12 @@ const expPercent = computed(() => {
 })
 
 const expNext = computed(() => {
-  return (userInfo.value?.level || 1) * 100
+  return (store.userInfo?.level || 1) * 100
 })
 
 onMounted(() => {
-  userInfo.value = getUserInfo()
-  loadPetInfo()
+  store.init()
 })
-
-function loadPetInfo() {
-  petApi.getInfo()
-    .then(data => {
-      petInfo.value = data
-    })
-    .catch(() => {})
-}
 
 function formatNum(n) {
   if (!n && n !== 0) return '0'

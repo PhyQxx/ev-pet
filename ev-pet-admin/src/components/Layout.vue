@@ -82,6 +82,7 @@
             <span>👤 管理员：{{ adminName }}</span>
           </div>
           <div class="ev-admin-avatar">👨‍💻</div>
+          <button class="ev-logout-btn" @click="handleLogout" title="退出登录">退出</button>
           <span class="ev-topbar-badge">Beta</span>
         </div>
       </div>
@@ -96,11 +97,19 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useAdminStore } from '@/store/index.js'
 
 const route = useRoute()
+const router = useRouter()
+const adminStore = useAdminStore()
 
-const adminName = '小明'
+const handleLogout = () => {
+  adminStore.logout()
+  router.push('/login')
+}
+
+const adminName = computed(() => adminStore.username || '管理员')
 
 const overviewNav = [
   { icon: '📊', label: '数据看板', path: '/dashboard' },
@@ -313,6 +322,23 @@ const isActive = (path) => {
   padding: 2px 6px;
   border-radius: 8px;
   font-weight: 700;
+}
+
+.ev-logout-btn {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ev-logout-btn:hover {
+  background: rgba(255, 107, 107, 0.3);
+  border-color: rgba(255, 107, 107, 0.5);
+  color: #fff;
 }
 
 /* ── Main ── */

@@ -4,6 +4,7 @@ import com.evpet.dto.ChatDTO;
 import com.evpet.model.ChatMessage;
 import com.evpet.service.ChatService;
 import com.evpet.vo.ApiResponse;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +20,14 @@ public class ChatController extends BaseController {
     @PostMapping("/send")
     public ApiResponse<String> send(
             @RequestHeader("Authorization") String token,
-            @RequestBody ChatDTO dto) {
+            @Valid @RequestBody ChatDTO dto) {
         try {
             Long userId = getUserIdFromToken(token);
-            return chatService.chat(userId, dto);
+            return ApiResponse.success(chatService.chat(userId, dto));
+        } catch (IllegalArgumentException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("发送消息失败: " + e.getMessage());
+            return ApiResponse.error("发送消息失败");
         }
     }
 

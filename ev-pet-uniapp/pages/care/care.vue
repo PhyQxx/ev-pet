@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="header">
       <button class="back-btn" @click="goBack">
-        <svg fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <text style="font-size:18px;">←</text>
       </button>
       <text class="header-title">养成中心</text>
       <view class="header-coins">
@@ -170,13 +170,13 @@
 </template>
 
 <script>
-import { pet as petApi, getUserInfo } from '../../utils/api.js'
+import { pet as petApi } from '@/utils/api.js'
+import { store } from '@/store/index.js'
 
 export default {
   data() {
     return {
-      petInfo: null,
-      userInfo: null,
+      store,
       actionVisible: false,
       actionTitle: '',
       actionDesc: '',
@@ -193,40 +193,33 @@ export default {
     }
   },
   computed: {
+    petInfo() { return this.store.petInfo },
+    userInfo() { return this.store.userInfo },
     petEmoji() {
-      const stage = this.petInfo?.stage || 1
-      if (stage === 1) return '🐣'
-      if (stage === 2) return '🐥'
-      return '🦊'
+      return this.store.petEmoji
     },
-    health() { return this.petInfo?.health || 0 },
-    fullness() { return this.petInfo?.fullness || 0 },
-    petMood() { return this.petInfo?.mood || 0 },
-    clean() { return this.petInfo?.clean || 80 },
-    intimacy() { return this.petInfo?.intimacy || 50 },
-    currentExp() { return this.petInfo?.exp || 0 },
-    totalExp() { return this.petInfo?.nextEvolutionExp || 100 },
+    health() { return this.store.health },
+    fullness() { return this.store.fullness },
+    petMood() { return this.store.mood },
+    clean() { return this.store.petInfo?.clean || 80 },
+    intimacy() { return this.store.petInfo?.intimacy || 50 },
+    currentExp() { return this.store.petInfo?.exp || 0 },
+    totalExp() { return this.store.petInfo?.nextEvolutionExp || 100 },
     remainingExp() { return Math.max(0, this.totalExp - this.currentExp) },
     evoProgress() { return Math.min(100, (this.currentExp / this.totalExp) * 100) },
     nextStageName() {
       const names = { 1: '成长期', 2: '完全体', 3: '究极体' }
-      return names[this.petInfo?.stage || 1] || '成长期'
+      return names[this.store.petInfo?.stage || 1] || '成长期'
     },
     nextStageEmoji() {
       const emojis = { 1: '🐥', 2: '🦊', 3: '🔮' }
-      return emojis[this.petInfo?.stage || 1] || '🐥'
+      return emojis[this.store.petInfo?.stage || 1] || '🐥'
     }
   },
   onShow() {
-    this.userInfo = getUserInfo()
-    this.loadPetInfo()
+    this.store.init()
   },
   methods: {
-    loadPetInfo() {
-      petApi.getInfo().then(data => {
-        this.petInfo = data
-      }).catch(() => {})
-    },
     doCare(type) {
       const configs = {
         feed: { title: '喂食中...', desc: '小福正在享用美食~ 🍖', complete: '✨ 完成！饱食+25', api: 'feed' },
@@ -245,7 +238,7 @@ export default {
       this.actionVisible = true
 
       petApi[cfg.api]().then(data => {
-        this.petInfo = data
+        this.store.petInfo = data
       }).catch(() => {})
 
       let progress = 0

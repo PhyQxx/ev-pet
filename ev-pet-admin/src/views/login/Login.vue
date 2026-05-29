@@ -22,9 +22,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { auth } from '@/api/index.js'
+import { adminAuth } from '@/api/index.js'
+import { useAdminStore } from '@/store/index.js'
 
 const router = useRouter()
+const adminStore = useAdminStore()
 const username = ref('')
 const password = ref('')
 const loading = ref(false)
@@ -36,14 +38,16 @@ const handleLogin = async () => {
   }
   loading.value = true
   try {
-    // Admin 后端没有登录接口，所有操作为 mock
-    // 模拟登录成功，存储 mock token
-    await new Promise(resolve => setTimeout(resolve, 600))
-    localStorage.setItem('adminToken', 'mock-admin-token-' + Date.now())
-    ElMessage.success('登录成功')
-    router.push('/dashboard')
+    const res = await adminAuth.login({ username: username.value, password: password.value })
+    if (res && res.code === 200 && res.data) {
+      adminStore.setLogin(res.data)
+      ElMessage.success('登录成功')
+      router.push('/dashboard')
+    } else {
+      ElMessage.error(res?.message || '登录失败')
+    }
   } catch (err) {
-    ElMessage.error(err.message || '登录失败，请检查网络')
+    ElMessage.error('登录失败，请检查用户名和密码')
   } finally {
     loading.value = false
   }

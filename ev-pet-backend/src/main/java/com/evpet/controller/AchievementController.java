@@ -29,9 +29,11 @@ public class AchievementController extends BaseController {
             @RequestParam Long achievementId) {
         try {
             Long userId = getUserIdFromToken(token);
-            return achievementService.claimReward(userId, achievementId);
+            return ApiResponse.success(achievementService.claimReward(userId, achievementId));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ApiResponse.error(e.getMessage());
         } catch (Exception e) {
-            return ApiResponse.error("领取奖励失败: " + e.getMessage());
+            return ApiResponse.error("领取奖励失败");
         }
     }
 

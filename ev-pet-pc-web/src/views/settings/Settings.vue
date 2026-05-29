@@ -300,10 +300,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore, usePetStore } from '../../store'
+import { auth as authApi } from '../../api/index.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -345,15 +346,20 @@ const userInfo = ref({
   vipExpire: '2026-05-15 到期'
 })
 
-const notificationSettings = ref({
+const safeParse = (str, fallback) => {
+  if (!str || str === 'undefined') return fallback
+  try { return JSON.parse(str) } catch { return fallback }
+}
+
+const notificationSettings = ref(safeParse(localStorage.getItem('notificationSettings'), {
   pet: { title: '宠物状态提醒', desc: '饱食度、心情、体力较低时发送通知', value: true },
   daily: { title: '每日签到提醒', desc: '固定时间提醒你领取每日奖励', value: true },
   achievement: { title: '成就解锁通知', desc: '解锁成就时显示动画和奖励', value: true },
   shop: { title: '商店折扣推送', desc: '接收限时折扣和特惠活动通知', value: false },
   summary: { title: 'AI 对话摘要', desc: '每日自动生成宠物状态摘要推送', value: true }
-})
+}))
 
-const notifyTime = ref('09:00')
+const notifyTime = ref(localStorage.getItem('notifyTime') || '09:00')
 const twoFactor = ref(false)
 const passwordForm = ref({ current: '', new: '', confirm: '' })
 
@@ -362,13 +368,23 @@ const themes = [
   { id: 'mint', name: '薄荷清新', emoji: '🌿' },
   { id: 'night', name: '暗夜星空', emoji: '🌙' }
 ]
-const activeTheme = ref('pink')
+const activeTheme = ref(localStorage.getItem('activeTheme') || 'pink')
 const themeColors = ['#FFB3C6', '#A8D8EA', '#FFE5A0', '#D5AAFF', '#B8F1CC', '#FFD5E5', '#C9E8F7', '#FFF0BA', '#E8D5F5', '#4A3F55']
-const activeColor = ref('#FFB3C6')
-const petAnimation = ref(true)
-const soundEffect = ref(true)
-const bgMusic = ref(false)
-const volume = ref(70)
+const activeColor = ref(localStorage.getItem('activeColor') || '#FFB3C6')
+const petAnimation = ref(localStorage.getItem('petAnimation') !== 'false')
+const soundEffect = ref(localStorage.getItem('soundEffect') !== 'false')
+const bgMusic = ref(localStorage.getItem('bgMusic') === 'true')
+const volume = ref(parseInt(localStorage.getItem('volume') || '70'))
+
+// Persist settings to localStorage
+watch(notificationSettings, (v) => localStorage.setItem('notificationSettings', JSON.stringify(v)), { deep: true })
+watch(notifyTime, (v) => localStorage.setItem('notifyTime', v))
+watch(activeTheme, (v) => localStorage.setItem('activeTheme', v))
+watch(activeColor, (v) => localStorage.setItem('activeColor', v))
+watch(petAnimation, (v) => localStorage.setItem('petAnimation', v))
+watch(soundEffect, (v) => localStorage.setItem('soundEffect', v))
+watch(bgMusic, (v) => localStorage.setItem('bgMusic', v))
+watch(volume, (v) => localStorage.setItem('volume', v))
 
 const saveProfile = () => {
   userStore.userInfo = { ...userStore.userInfo, nickname: userInfo.value.nickname }
@@ -414,8 +430,15 @@ const confirmDelete = () => {
     confirmButtonText: '确定注销',
     cancelButtonText: '取消',
     type: 'error'
-  }).then(() => {
-    ElMessage.info('账号注销功能开发中...')
+  }).then(async () => {
+    try {
+      await authApi.deleteAccount()
+      ElMessage.success('账号已注销')
+      localStorage.removeItem('token')
+      router.push('/login')
+    } catch (e) {
+      ElMessage.error('注销失败，请重试')
+    }
   }).catch(() => {})
 }
 </script>

@@ -62,6 +62,13 @@
         "navigationBarTitleText": "打工系统",
         "navigationBarBackgroundColor": "#F5EEF8"
       }
+    },
+    {
+      "path": "pages/backpack/backpack",
+      "style": {
+        "navigationBarTitleText": "我的背包",
+        "navigationBarBackgroundColor": "#EDE4FF"
+      }
     }
   ],
   "tabBar": {

@@ -129,7 +129,7 @@ const loadAchievements = async () => {
   // Try API first, fallback to mock data
   try {
     const res = await fetch('/api/admin/achievements', {
-      headers: { 'Authorization': localStorage.getItem('token') || '' }
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('adminToken') || '') }
     })
     const data = await res.json()
     if (data.code === 200 && data.data) {

@@ -7,6 +7,7 @@ import com.evpet.mapper.UserMapper;
 import com.evpet.model.Pet;
 import com.evpet.model.User;
 import com.evpet.utils.JwtUtil;
+import com.evpet.utils.PetUtil;
 import com.evpet.vo.LoginVO;
 import com.evpet.vo.PetVO;
 import com.evpet.vo.UserVO;
@@ -116,33 +117,28 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional
+    public void deleteAccount(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+        // Deactivate account (soft delete)
+        user.setStatus(0);
+        user.setNickname("已注销用户");
+        user.setAvatar(null);
+        userMapper.updateById(user);
+    }
+
     private PetVO toPetVO(Pet pet) {
-        return PetVO.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .stage(pet.getStage())
-                .level(pet.getLevel())
-                .exp(pet.getExp())
-                .health(pet.getHealth())
-                .fullness(pet.getFullness())
-                .mood(pet.getMood())
-                .status(calculateStatus(pet))
-                .nextEvolutionExp(calculateNextEvolutionExp(pet.getStage()))
-                .build();
+        return PetUtil.toPetVO(pet);
     }
 
     private String calculateStatus(Pet pet) {
-        if (pet.getMood() < 30) return "angry";
-        if (pet.getFullness() < 30) return "hungry";
-        if (pet.getHealth() < 30) return "tired";
-        return "happy";
+        return PetUtil.calculateStatus(pet);
     }
 
     private Long calculateNextEvolutionExp(int stage) {
-        return switch (stage) {
-            case 1 -> 100L;  // 100 exp to stage 2
-            case 2 -> 500L;  // 500 exp to stage 3
-            default -> 0L;
-        };
+        return PetUtil.calculateNextEvolutionExp(stage);
     }
 }

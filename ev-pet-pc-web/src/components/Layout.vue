@@ -99,6 +99,10 @@ const mainNav = [
   { icon: '🌱', label: '养成中心', path: '/growth' },
   { icon: '🎨', label: '装扮工作室', path: '/studio' },
   { icon: '🛒', label: '商店', path: '/shop' },
+  { icon: '🐾', label: '宠物管理', path: '/pets' },
+  { icon: '🎯', label: '活动中心', path: '/activities' },
+  { icon: '💼', label: '打工中心', path: '/work' },
+  { icon: '👥', label: '社交中心', path: '/social' },
 ]
 
 const myNav = [
@@ -116,7 +120,9 @@ const pageTitle = computed(() => {
     '/growth': '养成中心',
     '/studio': '装扮工作室',
     '/shop': '商店',
-    '/work': '打工系统',
+    '/pets': '宠物管理',
+    '/activities': '活动中心',
+    '/work': '打工中心',
     '/social': '社交中心',
     '/achievement': '成就系统',
     '/settings': '设置',

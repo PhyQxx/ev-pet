@@ -5,6 +5,7 @@ import com.evpet.mapper.PetMapper;
 import com.evpet.mapper.UserMapper;
 import com.evpet.model.Pet;
 import com.evpet.model.User;
+import com.evpet.utils.PetUtil;
 import com.evpet.vo.PetVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class PetService {
 
     private final PetMapper petMapper;
     private final UserMapper userMapper;
+    private final AchievementService achievementService;
 
     public PetVO getPetInfo(Long userId) {
         Pet pet = petMapper.selectOne(new LambdaQueryWrapper<Pet>()
@@ -40,6 +42,8 @@ public class PetService {
         checkEvolution(pet);
         petMapper.updateById(pet);
         updateUserExp(userId, 5);
+        // 触发成就检查（喂食次数）
+        achievementService.checkAndGrantAchievement(userId, 1, pet.getExp() / 10);
         return toPetVO(pet);
     }
 
@@ -65,6 +69,8 @@ public class PetService {
         checkEvolution(pet);
         petMapper.updateById(pet);
         updateUserExp(userId, 10);
+        // 触发成就检查（陪玩次数）
+        achievementService.checkAndGrantAchievement(userId, 2, pet.getExp() / 20);
         return toPetVO(pet);
     }
 
@@ -96,6 +102,10 @@ public class PetService {
         pet.setMood(Math.max(0, pet.getMood() - moodDecay));
 
         pet.setUpdateTime(now);
+        // 更新时间戳防止下次重复衰减
+        if (fullnessDecay > 0) pet.setLastFeedTime(now);
+        if (healthDecay > 0) pet.setLastBathTime(now);
+        if (moodDecay > 0) pet.setLastPlayTime(now);
         petMapper.updateById(pet);
     }
 
@@ -138,33 +148,14 @@ public class PetService {
     }
 
     private PetVO toPetVO(Pet pet) {
-        return PetVO.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .stage(pet.getStage())
-                .level(pet.getLevel())
-                .exp(pet.getExp())
-                .health(pet.getHealth())
-                .fullness(pet.getFullness())
-                .mood(pet.getMood())
-                .status(calculateStatus(pet))
-                .appearance(pet.getAppearance())
-                .nextEvolutionExp(calculateNextEvolutionExp(pet.getStage()))
-                .build();
+        return PetUtil.toPetVO(pet);
     }
 
     private String calculateStatus(Pet pet) {
-        if (pet.getMood() < 30) return "angry";
-        if (pet.getFullness() < 30) return "hungry";
-        if (pet.getHealth() < 30) return "tired";
-        return "happy";
+        return PetUtil.calculateStatus(pet);
     }
 
     private Long calculateNextEvolutionExp(int stage) {
-        return switch (stage) {
-            case 1 -> 100L;
-            case 2 -> 500L;
-            default -> 0L;
-        };
+        return PetUtil.calculateNextEvolutionExp(stage);
     }
 }

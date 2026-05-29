@@ -1,13 +1,13 @@
 package com.evpet.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.evpet.dto.ChatDTO;
 import com.evpet.mapper.ChatMessageMapper;
 import com.evpet.mapper.PetMapper;
 import com.evpet.model.ChatMessage;
 import com.evpet.model.Pet;
 import com.evpet.utils.ContentFilterUtil;
-import com.evpet.vo.ApiResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+
 
 @Service
 @RequiredArgsConstructor
@@ -31,15 +31,16 @@ public class ChatService {
     private final ContentFilterUtil contentFilter;
     private final SystemConfigService systemConfigService;
 
+    private final OkHttpClient okHttpClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static final int MAX_HISTORY = 10;
 
     @Transactional
-    public ApiResponse<String> chat(Long userId, ChatDTO dto) {
+    public String chat(Long userId, ChatDTO dto) {
         // 安全检查
         if (!contentFilter.isContentSafe(dto.getContent())) {
-            return ApiResponse.error("内容包含敏感词，请修改后重试");
+            throw new IllegalArgumentException("内容包含敏感词，请修改后重试");
         }
 
         String safeContent = contentFilter.sanitize(dto.getContent());
@@ -59,7 +60,7 @@ public class ChatService {
         // 保存AI回复
         saveMessage(userId, pet.getId(), "assistant", aiResponse);
 
-        return ApiResponse.success(aiResponse);
+        return aiResponse;
     }
 
     public List<ChatMessage> getChatHistory(Long userId) {
@@ -68,13 +69,13 @@ public class ChatService {
         if (pet == null) {
             return new ArrayList<>();
         }
-        return chatMessageMapper.selectList(
+        return chatMessageMapper.selectPage(
+                new Page<>(1, MAX_HISTORY),
                 new LambdaQueryWrapper<ChatMessage>()
                         .eq(ChatMessage::getUserId, userId)
                         .eq(ChatMessage::getPetId, pet.getId())
                         .orderByAsc(ChatMessage::getCreateTime)
-                        .last("LIMIT " + MAX_HISTORY)
-        );
+        ).getRecords();
     }
 
     private void saveMessage(Long userId, Long petId, String role, String content) {
@@ -112,11 +113,6 @@ public class ChatService {
                 return getDefaultResponse(userInput);
             }
 
-            OkHttpClient client = new OkHttpClient.Builder()
-                    .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .build();
-
             // 构建请求体
             String requestBody = buildRequestBody(context, history, userInput);
 
@@ -127,7 +123,7 @@ public class ChatService {
                     .post(RequestBody.create(requestBody, JSON))
                     .build();
 
-            try (Response response = client.newCall(request).execute()) {
+            try (Response response = okHttpClient.newCall(request).execute()) {
                 if (response.isSuccessful() && response.body() != null) {
                     String responseBody = response.body().string();
                     return parseAiResponse(responseBody);

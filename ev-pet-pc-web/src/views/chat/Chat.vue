@@ -296,36 +296,15 @@ onMounted(async () => {
 })
 </script>
 
-<style scoped>
-/* CSS Variables */
-:root {
-  --primary: #FFB3C6;
-  --primary-dark: #FF8FAB;
-  --primary-light: #FFD5E5;
-  --secondary: #A8D8EA;
-  --secondary-dark: #7EC8D8;
-  --purple: #D5AAFF;
-  --purple-light: #EDE4FF;
-  --green: #B8F1CC;
-  --bg: #F5EEF8;
-  --bg-page: #EEE8F5;
-  --border: #E8E0F0;
-  --text: #4A3F55;
-  --text-secondary: #7A6B8A;
-  --text-muted: #A898B8;
-  --radius: 16px;
-  --radius-sm: 10px;
-  --radius-full: 999px;
-  --shadow: 0 2px 12px rgba(80, 60, 100, 0.06);
-  --shadow-lg: 0 4px 20px rgba(80, 60, 100, 0.10);
-}
+<style scoped lang="scss">
+@use '@/styles/ev-pet.scss' as *;
 
 .chat-page {
   display: flex;
   height: 100%;
-  background: var(--bg-page);
+  background: $ev-bg-page;
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  color: var(--text);
+  color: $ev-text;
   font-size: 14px;
   line-height: 1.6;
 }
@@ -335,7 +314,7 @@ onMounted(async () => {
   width: 260px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
-  border-right: 1px solid var(--border);
+  border-right: 1px solid $ev-border;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -346,14 +325,14 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid $ev-border;
 }
 
 .logo-icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary), var(--purple));
+  background: linear-gradient(135deg, $ev-primary, $ev-purple);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -384,24 +363,24 @@ onMounted(async () => {
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  border-radius: $ev-radius-sm;
   cursor: pointer;
   transition: all 150ms;
 }
 
 .chat-list-item:hover {
-  background: var(--primary-light);
+  background: $ev-primary-light;
 }
 
 .chat-list-item.active {
-  background: var(--primary-light);
+  background: $ev-primary-light;
 }
 
 .chat-list-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), var(--purple-light));
+  background: linear-gradient(135deg, $ev-primary-light, $ev-purple-light);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -417,12 +396,12 @@ onMounted(async () => {
 .chat-list-name {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .chat-list-preview {
   font-size: 11px;
-  color: var(--text-muted);
+  color: $ev-text-muted;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -437,15 +416,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--primary-dark);
+  color: $ev-primary-dark;
   font-weight: 600;
   width: 100%;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid $ev-border;
   font-family: inherit;
 }
 
 .chat-new-btn:hover {
-  background: var(--primary-light);
+  background: $ev-primary-light;
 }
 
 /* Main Chat Area */
@@ -461,7 +440,7 @@ onMounted(async () => {
   padding: 14px 24px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid $ev-border;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -472,7 +451,7 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary-light), var(--purple-light));
+  background: linear-gradient(135deg, $ev-primary-light, $ev-purple-light);
   border: 2px solid white;
   display: flex;
   align-items: center;
@@ -519,10 +498,10 @@ onMounted(async () => {
 .icon-btn {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-sm);
+  border-radius: $ev-radius-sm;
   border: none;
-  background: var(--bg-page);
-  color: var(--text-secondary);
+  background: $ev-bg-page;
+  color: $ev-text-sec;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -531,8 +510,8 @@ onMounted(async () => {
 }
 
 .icon-btn:hover {
-  background: var(--primary-light);
-  color: var(--primary-dark);
+  background: $ev-primary-light;
+  color: $ev-primary-dark;
 }
 
 .icon-btn svg {
@@ -549,7 +528,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: var(--bg-page);
+  background: $ev-bg-page;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }
@@ -606,11 +585,11 @@ onMounted(async () => {
 }
 
 .msg-avatar.pet {
-  background: linear-gradient(135deg, var(--primary-light), var(--purple-light));
+  background: linear-gradient(135deg, $ev-primary-light, $ev-purple-light);
 }
 
 .msg-avatar.user {
-  background: linear-gradient(135deg, var(--secondary), var(--primary-light));
+  background: linear-gradient(135deg, $ev-secondary, $ev-primary-light);
 }
 
 .msg-bubble {
@@ -618,24 +597,24 @@ onMounted(async () => {
   padding: 10px 16px;
   font-size: 14px;
   line-height: 1.7;
-  box-shadow: var(--shadow);
+  box-shadow: $ev-shadow;
 }
 
 .msg-bubble.pet {
-  background: var(--purple-light);
+  background: $ev-purple-light;
   border-radius: 4px 18px 18px 18px;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .msg-bubble.user {
-  background: linear-gradient(135deg, var(--primary-light), #FFD5E8);
+  background: linear-gradient(135deg, $ev-primary-light, #FFD5E8);
   border-radius: 18px 4px 18px 18px;
-  color: var(--text);
+  color: $ev-text;
 }
 
 .msg-time {
   font-size: 10px;
-  color: var(--text-muted);
+  color: $ev-text-muted;
   margin-top: 3px;
 }
 
@@ -647,9 +626,9 @@ onMounted(async () => {
   margin-bottom: 4px;
   padding: 4px 8px;
   background: rgba(255, 255, 255, 0.8);
-  border-radius: var(--radius-full);
+  border-radius: $ev-radius-full;
   font-size: 11px;
-  color: var(--text-muted);
+  color: $ev-text-muted;
   width: fit-content;
 }
 
@@ -672,7 +651,7 @@ onMounted(async () => {
   display: flex;
   gap: 3px;
   align-items: center;
-  background: var(--purple-light);
+  background: $ev-purple-light;
   border-radius: 4px 18px 18px 18px;
   padding: 12px 16px;
 }
@@ -681,7 +660,7 @@ onMounted(async () => {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--purple);
+  background: $ev-purple;
   animation: typingBounce 1.2s ease-in-out infinite;
 }
 
@@ -703,7 +682,7 @@ onMounted(async () => {
   padding: 14px 24px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
-  border-top: 1px solid var(--border);
+  border-top: 1px solid $ev-border;
   display: flex;
   gap: 12px;
   align-items: flex-end;
@@ -725,20 +704,20 @@ onMounted(async () => {
 .suggestion-chip {
   flex-shrink: 0;
   padding: 5px 12px;
-  border-radius: var(--radius-full);
-  background: var(--bg-page);
-  border: 1px solid var(--border);
+  border-radius: $ev-radius-full;
+  background: $ev-bg-page;
+  border: 1px solid $ev-border;
   font-size: 12px;
-  color: var(--text-secondary);
+  color: $ev-text-sec;
   cursor: pointer;
   transition: all 150ms;
   font-family: inherit;
 }
 
 .suggestion-chip:hover {
-  background: var(--primary-light);
-  border-color: var(--primary);
-  color: var(--primary-dark);
+  background: $ev-primary-light;
+  border-color: $ev-primary;
+  color: $ev-primary-dark;
 }
 
 .input-box-wrap {
@@ -748,12 +727,12 @@ onMounted(async () => {
 
 .input-box {
   width: 100%;
-  background: var(--bg-page);
+  background: $ev-bg-page;
   border: 1.5px solid rgba(213, 170, 255, 0.3);
   border-radius: 20px;
   padding: 10px 16px;
   font-size: 14px;
-  color: var(--text);
+  color: $ev-text;
   outline: none;
   resize: none;
   font-family: inherit;
@@ -763,12 +742,12 @@ onMounted(async () => {
 }
 
 .input-box:focus {
-  border-color: var(--purple);
+  border-color: $ev-purple;
   box-shadow: 0 0 0 3px rgba(213, 170, 255, 0.1);
 }
 
 .input-box::placeholder {
-  color: var(--text-muted);
+  color: $ev-text-muted;
 }
 
 .send-btn {
@@ -776,7 +755,7 @@ onMounted(async () => {
   height: 44px;
   border-radius: 50%;
   border: none;
-  background: linear-gradient(135deg, var(--primary), var(--purple));
+  background: linear-gradient(135deg, $ev-primary, $ev-purple);
   color: white;
   display: flex;
   align-items: center;

@@ -1,3 +1,4 @@
+// API 地址：部署时需修改为实际服务器地址
 const BASE_URL = 'http://localhost:19081/api'
 
 // 保存token
@@ -101,7 +102,9 @@ export const social = {
   acceptFriend(requestId) { return request('/social/friend/accept', 'POST', { requestId }) },
   rejectFriend(requestId) { return request('/social/friend/reject', 'POST', { requestId }) },
   publishPost(content) { return request('/social/post/publish', 'POST', { content }) },
-  likePost(postId) { return request('/social/post/like', 'POST', { postId }) }
+  likePost(postId) { return request('/social/post/like', 'POST', { postId }) },
+  addComment(postId, content) { return request('/social/post/comment', 'POST', { postId, content }) },
+  getComments(postId) { return request('/social/post/comments', 'GET', { postId }) }
 }
 
 // 成就

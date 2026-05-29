@@ -6,3 +6,4 @@ target/
 .env
 .env.local
 *.local
+/.claude/setting.local.json

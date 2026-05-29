@@ -12,10 +12,10 @@
       </view>
       <view class="header-actions">
         <button class="icon-btn" @click="showToast('语音通话')">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.06 6.06l1.06-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <text style="font-size:16px;">📞</text>
         </button>
         <button class="icon-btn" @click="showToast('宠物详情')">
-          <svg fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <text style="font-size:16px;">ℹ️</text>
         </button>
       </view>
     </header>
@@ -24,10 +24,10 @@
     <scroll-view class="chat-area" scroll-y :scroll-top="scrollTop" scroll-with-animation>
       <view class="msg-date-divider">今天</view>
 
-      <view class="msg-pet" v-for="(msg, index) in messages" :key="index">
-        <view class="msg-pet-avatar">{{ petEmoji }}</view>
-        <view class="msg-pet-content">
-          <view class="msg-bubble-pet">{{ msg.content }}</view>
+      <view :class="msg.role === 'user' ? 'msg-user' : 'msg-pet'" v-for="(msg, index) in messages" :key="index">
+        <view class="msg-pet-avatar" v-if="msg.role !== 'user'">{{ petEmoji }}</view>
+        <view :class="msg.role === 'user' ? 'msg-user-content' : 'msg-pet-content'">
+          <view :class="msg.role === 'user' ? 'msg-bubble-user' : 'msg-bubble-pet'">{{ msg.content }}</view>
           <view class="msg-reaction" v-if="msg.reactions && msg.reactions.length">
             <view class="reaction-chip" v-for="r in msg.reactions" :key="r.emoji" @click="addReaction(r)">
               <text class="emoji">{{ r.emoji }}</text>
@@ -68,38 +68,36 @@
         confirm-type="send"
       ></textarea>
       <button class="send-btn" @click="sendMessage">
-        <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <text style="font-size:18px;">📤</text>
       </button>
     </view>
   </view>
 </template>
 
 <script>
-import { chat as chatApi, pet as petApi } from '../../utils/api.js'
+import { chat as chatApi } from '@/utils/api.js'
+import { store } from '@/store/index.js'
 
 export default {
   data() {
     return {
+      store,
       messages: [],
       inputText: '',
       loading: false,
       scrollTop: 0,
-      petInfo: null,
       quickReplies: ['今天心情怎么样？', '小福饿了吗？', '想你了~', '给你取个新名字', '一起玩游戏吗？']
     }
   },
   computed: {
+    petInfo() { return this.store.petInfo },
     petEmoji() {
-      const stage = this.petInfo?.stage || 1
-      if (stage === 1) return '🐣'
-      if (stage === 2) return '🐥'
-      if (stage === 3) return '🦊'
-      return '🦊'
+      return this.store.petEmoji
     }
   },
   onLoad() {
     this.loadHistory()
-    this.loadPetInfo()
+    this.store.loadPetInfo()
   },
   methods: {
     loadHistory() {
@@ -120,13 +118,6 @@ export default {
           this.scrollToBottom()
         })
     },
-    loadPetInfo() {
-      petApi.getInfo()
-        .then(data => {
-          this.petInfo = data
-        })
-        .catch(err => {})
-    },
     sendMessage() {
       const content = this.inputText.trim()
       if (!content || this.loading) return
@@ -143,7 +134,7 @@ export default {
           this.loading = false
           this.messages.push({ role: 'assistant', content: response, reactions: [] })
           this.scrollToBottom()
-          this.loadPetInfo()
+          this.store.loadPetInfo()
         })
         .catch(err => {
           this.loading = false

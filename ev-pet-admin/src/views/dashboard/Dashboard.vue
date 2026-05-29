@@ -1,41 +1,14 @@
 <template>
   <div class="dashboard">
-    <!-- Page Header -->
-    <div class="page-title">📊 数据看板</div>
-    <div class="page-sub">实时数据一览 · {{ new Date().toLocaleDateString('zh-CN') }} 更新</div>
+    <PageHeader icon="📊" title="数据看板" :subtitle="'实时数据一览 · ' + new Date().toLocaleDateString('zh-CN') + ' 更新'" />
 
     <!-- Stat Cards Row -->
     <div class="stat-row">
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#FFF0F5;">👥</div>
-        <div class="stat-val">{{ statsData.dau > 0 ? statsData.dau.toLocaleString() : '—' }}</div>
-        <div class="stat-label">今日活跃用户 (DAU)</div>
-        <div class="stat-change up">↑ 8.3% 较昨日</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#F0FFF5;">📅</div>
-        <div class="stat-val">{{ statsData.mau > 0 ? statsData.mau.toLocaleString() : '—' }}</div>
-        <div class="stat-label">本月活跃用户 (MAU)</div>
-        <div class="stat-change up">↑ 12.6% 较上月</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#FFE5A0;">💰</div>
-        <div class="stat-val" style="color:#D4A000;">¥{{ statsData.revenue > 0 ? statsData.revenue.toLocaleString() : '—' }}</div>
-        <div class="stat-label">今日收入</div>
-        <div class="stat-change up">↑ 5.1% 较昨日</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#FFF4C2;">💳</div>
-        <div class="stat-val">{{ statsData.payingUsers > 0 ? statsData.payingUsers.toLocaleString() : '—' }}</div>
-        <div class="stat-label">今日付费人数</div>
-        <div class="stat-change up">↑ 3.2% 较昨日</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#F5F0FF;">📊</div>
-        <div class="stat-val">{{ statsData.arpu > 0 ? '¥' + statsData.arpu.toFixed(2) : '—' }}</div>
-        <div class="stat-label">ARPU</div>
-        <div class="stat-change up">↑ 2.1%</div>
-      </div>
+      <StatCard icon="👥" color="#FFF0F5" :value="statsData.dau || '—'" label="今日活跃用户 (DAU)" :change="8.3" />
+      <StatCard icon="📅" color="#F0FFF5" :value="statsData.mau || '—'" label="本月活跃用户 (MAU)" :change="12.6" />
+      <StatCard icon="💰" color="#FFE5A0" :value="statsData.revenue || '—'" label="今日收入" :change="5.1" format="currency" />
+      <StatCard icon="💳" color="#FFF4C2" :value="statsData.payingUsers || '—'" label="今日付费人数" :change="3.2" />
+      <StatCard icon="📊" color="#F5F0FF" :value="statsData.arpu || '—'" label="ARPU" :change="2.1" format="decimal" />
     </div>
 
     <!-- Dashboard Grid: Chart + Activity -->
@@ -84,32 +57,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><div class="td-user"><div class="td-avatar" style="background:#FFD5E5;">🐱</div><div><div class="td-name">小华</div><div class="td-id">ID: 100234</div></div></div></td>
-                  <td>小布 🐱 LV.3</td>
-                  <td>2026-04-15 18:30</td>
-                  <td><span class="badge badge-green">正常</span></td>
-                  <td><span class="action-link">详情</span><span class="action-link" style="color:#FF6B6B;">禁用</span></td>
-                </tr>
-                <tr>
-                  <td><div class="td-user"><div class="td-avatar" style="background:#D5AAFF;">🐰</div><div><div class="td-name">阿雪</div><div class="td-id">ID: 100233</div></div></div></td>
-                  <td>小火狐 🦊 LV.18</td>
-                  <td>2026-04-15 16:20</td>
-                  <td><span class="badge badge-green">正常</span></td>
-                  <td><span class="action-link">详情</span><span class="action-link" style="color:#FF6B6B;">禁用</span></td>
-                </tr>
-                <tr>
-                  <td><div class="td-user"><div class="td-avatar" style="background:#FFE5A0;">🐶</div><div><div class="td-name">小林</div><div class="td-id">ID: 100232</div></div></div></td>
-                  <td>旺财 🐶 LV.7</td>
-                  <td>2026-04-15 14:05</td>
-                  <td><span class="badge badge-yellow">待验证</span></td>
-                  <td><span class="action-link">详情</span><span class="action-link" style="color:#FF6B6B;">禁用</span></td>
-                </tr>
-                <tr>
-                  <td><div class="td-user"><div class="td-avatar" style="background:#A8D8EA;">🐹</div><div><div class="td-name">小团子</div><div class="td-id">ID: 100231</div></div></div></td>
-                  <td>小绒 🐹 LV.2</td>
-                  <td>2026-04-15 11:30</td>
-                  <td><span class="badge badge-green">正常</span></td>
+                <tr v-for="user in recentUsers" :key="user.id">
+                  <td><div class="td-user"><div class="td-avatar" :style="{ background: user.bg }">{{ user.avatar }}</div><div><div class="td-name">{{ user.nickname }}</div><div class="td-id">ID: {{ user.id }}</div></div></div></td>
+                  <td>{{ user.pet }} {{ user.petEmoji }} LV.{{ user.level }}</td>
+                  <td>{{ user.time }}</td>
+                  <td><StatusBadge :type="user.status === '禁用' ? 'danger' : user.status === '待验证' ? 'warning' : 'success'" :label="user.status" /></td>
                   <td><span class="action-link">详情</span><span class="action-link" style="color:#FF6B6B;">禁用</span></td>
                 </tr>
               </tbody>
@@ -127,45 +79,13 @@
             <span class="more">查看全部 →</span>
           </div>
           <div class="user-list">
-            <div class="user-item">
-              <div class="user-item-avatar" style="background:#FFD5E5;">🐱</div>
+            <div v-for="(user, index) in activeUsers" :key="index" class="user-item">
+              <div class="user-item-avatar" :style="{ background: user.bg }">{{ user.avatar }}</div>
               <div class="user-item-info">
-                <div class="user-item-name">裴浩宇</div>
-                <div class="user-item-meta">今天 18:00 · LV.12</div>
+                <div class="user-item-name">{{ user.name }}</div>
+                <div class="user-item-meta">{{ user.meta }}</div>
               </div>
-              <div class="user-item-badge badge-green">¥68</div>
-            </div>
-            <div class="user-item">
-              <div class="user-item-avatar" style="background:#D5AAFF;">🐰</div>
-              <div class="user-item-info">
-                <div class="user-item-name">阿雪</div>
-                <div class="user-item-meta">今天 16:20 · LV.18</div>
-              </div>
-              <div class="user-item-badge badge-green">¥128</div>
-            </div>
-            <div class="user-item">
-              <div class="user-item-avatar" style="background:#FFE5A0;">🐶</div>
-              <div class="user-item-info">
-                <div class="user-item-name">小林</div>
-                <div class="user-item-meta">昨天 22:30 · LV.7</div>
-              </div>
-              <div class="user-item-badge badge-purple">手机</div>
-            </div>
-            <div class="user-item">
-              <div class="user-item-avatar" style="background:#A8D8EA;">🐹</div>
-              <div class="user-item-info">
-                <div class="user-item-name">小华</div>
-                <div class="user-item-meta">昨天 20:15 · LV.3</div>
-              </div>
-              <div class="user-item-badge badge-blue">微信</div>
-            </div>
-            <div class="user-item">
-              <div class="user-item-avatar" style="background:#FFACA8;">🐾</div>
-              <div class="user-item-info">
-                <div class="user-item-name">测试用户</div>
-                <div class="user-item-meta">3天前 · LV.1</div>
-              </div>
-              <div class="user-item-badge badge-red">禁用</div>
+              <div class="user-item-badge" :class="user.badgeClass">{{ user.badge }}</div>
             </div>
           </div>
         </div>
@@ -174,35 +94,11 @@
         <div class="card">
           <div class="card-title">🔔 实时动态</div>
           <div class="activity-feed">
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#B8F1CC;"></div>
-              <div class="activity-icon">👤</div>
-              <div class="activity-text">用户 <b>阿雪</b> 完成了宠物进化，获得「小火狐」</div>
-              <div class="activity-time">1分钟前</div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#FFE5A0;"></div>
-              <div class="activity-icon">🛒</div>
-              <div class="activity-text">用户 <b>小玲</b> 购买了「月卡·急速成长」</div>
-              <div class="activity-time">3分钟前</div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#FFD5E5;"></div>
-              <div class="activity-icon">🐾</div>
-              <div class="activity-text">新用户 <b>小华</b> 刚刚领取了第一只宠物「小布」</div>
-              <div class="activity-time">5分钟前</div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#A8D8EA;"></div>
-              <div class="activity-icon">🏆</div>
-              <div class="activity-text">用户 <b>小明</b> 达成了「连续登录7天」成就</div>
-              <div class="activity-time">8分钟前</div>
-            </div>
-            <div class="activity-item">
-              <div class="activity-dot" style="background:#FFACA8;"></div>
-              <div class="activity-icon">🚨</div>
-              <div class="activity-text">内容审核：发现 1 条违规宠物昵称，已标记</div>
-              <div class="activity-time">12分钟前</div>
+            <div v-for="(item, index) in activities" :key="index" class="activity-item">
+              <div class="activity-dot" :style="{ background: item.dot }"></div>
+              <div class="activity-icon">{{ item.icon }}</div>
+              <div class="activity-text" v-html="item.text"></div>
+              <div class="activity-time">{{ item.time }}</div>
             </div>
           </div>
         </div>
@@ -214,6 +110,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { stats, userAdmin } from '@/api/index.js'
+import { PageHeader, StatCard, StatusBadge } from '@/components/shared'
 
 // Dashboard stats data
 const statsData = ref({
@@ -358,20 +255,6 @@ onMounted(() => {
   opacity: 1;
 }
 
-/* Badges — keep for Dashboard (custom colors differ from global.css) */
-.badge {
-  padding: 2px 9px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  display: inline-block;
-}
-
-.badge-green { background: #E8F9EE; color: #2DA44E; }
-.badge-yellow { background: #FFF8E6; color: #D4A000; }
-.badge-red { background: #FFF0F0; color: #FF6B6B; }
-.badge-purple { background: #F5EEFF; color: #8B5CF6; }
-.badge-blue { background: #E8F4FF; color: #2F80ED; }
 
 /* Dashboard table overrides — transparent background, lighter borders */
 table thead th {
