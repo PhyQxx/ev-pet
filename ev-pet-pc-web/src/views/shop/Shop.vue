@@ -205,22 +205,12 @@ const startCountdown = () => {
 const loadItems = async () => {
   try {
     const data = await shopApi.getItems(category.value)
-    items.value = data.length ? data : getMockItems()
+    items.value = Array.isArray(data) ? data : (data?.items || [])
   } catch (err) {
-    items.value = getMockItems()
+    console.error('Failed to load shop items:', err)
+    items.value = []
   }
 }
-
-const getMockItems = () => [
-  { id: 1, name: '黄金猫粮', description: '恢复饱食 +40，心情 +10', price: 80, category: 'food', owned: false, hot: true, new: false },
-  { id: 2, name: '鲜美三文鱼', description: '恢复饱食 +55，心情 +20', price: 150, category: 'food', owned: false, hot: false, new: true },
-  { id: 3, name: '限定甜品盒', description: '恢复饱食 +30，经验 +30', price: 120, category: 'food', owned: false, hot: false, new: false },
-  { id: 4, name: '小黄鸭蛋糕', description: '恢复饱食 +35，心情 +15', price: 60, category: 'food', owned: true, hot: false, new: false },
-  { id: 5, name: '小王子服', description: '稀有服装，尊贵象征', price: 500, category: 'clothing', owned: false, hot: true, new: false },
-  { id: 6, name: '粉色蓬蓬裙', description: '可爱蓬蓬裙，少女心满满', price: 280, category: 'clothing', owned: false, hot: false, new: true },
-  { id: 7, name: '星光皇冠', description: '限定发饰，闪耀全场', price: 380, category: 'accessory', owned: false, hot: false, new: true },
-  { id: 8, name: '樱花发卡', description: '春季限定，浪漫樱花', price: 120, category: 'accessory', owned: false, hot: true, new: false }
-]
 
 const changeCategory = (cat) => {
   category.value = cat

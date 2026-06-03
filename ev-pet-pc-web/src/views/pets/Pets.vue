@@ -47,16 +47,60 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useUserStore } from '../../store'
+import { pet as petApi } from '../../api'
 
-const pets = ref([
-  { id: 1, name: '小福', icon: '🦊', level: 12, state: 'normal', stateText: '正常', mood: 85, hunger: 72, mutation: false, value: 2800 },
-  { id: 2, name: '小白', icon: '🐰', level: 8, state: 'normal', stateText: '正常', mood: 60, hunger: 45, mutation: false, value: 1500 },
-  { id: 3, name: '雷神', icon: '⚡', level: 15, state: 'mutation', stateText: '变异', mood: 95, hunger: 88, mutation: true, value: 8800 },
-])
+const userStore = useUserStore()
+const loading = ref(true)
+
+const petData = ref(null)
+
+const stageEmojis = { 1: '🥚', 2: '🐱', 3: '😺', 4: '👑' }
+
+const petIcon = computed(() => stageEmojis[petData.value?.stage] || '🐱')
+const petStateText = computed(() => {
+  if (!petData.value) return '加载中'
+  const m = petData.value.mood || 0
+  if (m >= 80) return '开心'
+  if (m >= 50) return '正常'
+  if (m >= 20) return '一般'
+  return '不开心'
+})
+const petStateClass = computed(() => {
+  const text = petStateText.value
+  if (text === '开心') return 'happy'
+  if (text === '正常') return 'normal'
+  return 'low'
+})
+
+const pets = computed(() => petData.value ? [{
+  id: petData.value.id,
+  name: petData.value.name || '小可爱',
+  icon: petIcon.value,
+  level: petData.value.level || 1,
+  state: petStateClass.value,
+  stateText: petStateText.value,
+  mood: petData.value.mood || 0,
+  hunger: petData.value.fullness || 0,
+  mutation: false,
+  value: (petData.value.level || 1) * 500
+}] : [])
 
 const mutationCount = computed(() => pets.value.filter(p => p.mutation).length)
 const totalValue = computed(() => pets.value.reduce((s, p) => s + p.value, 0).toLocaleString())
+
+onMounted(async () => {
+  try {
+    const data = await petApi.getInfo()
+    petData.value = data
+    userStore.updatePet(data)
+  } catch (err) {
+    console.error('Failed to load pet info:', err)
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <style scoped>
@@ -80,6 +124,8 @@ const totalValue = computed(() => pets.value.reduce((s, p) => s + p.value, 0).to
 .pet-level { background: linear-gradient(135deg, #FFB3C6, #D5AAFF); color: #fff; font-size: 12px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
 .pet-state { font-size: 12px; padding: 2px 8px; border-radius: 10px; }
 .pet-state.normal { background: #B8F1CC; color: #2e7d32; }
+.pet-state.happy { background: #B8F1CC; color: #2e7d32; }
+.pet-state.low { background: #FFE5E5; color: #c62828; }
 .pet-state.mutation { background: #FFE5A0; color: #7d4e00; }
 .pet-mood, .pet-hunger { font-size: 12px; color: var(--text-secondary, #7A6B8A); }
 </style>

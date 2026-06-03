@@ -368,8 +368,17 @@ onMounted(async () => {
   }
 })
 
-const toggleFeed = () => {
+const toggleFeed = async () => {
   feedingActive.value = !feedingActive.value
+  if (feedingActive.value) {
+    try {
+      const data = await petApi.feed()
+      petStore.$patch({ petInfo: data })
+      ElMessage.success('喂食成功！饱食度+25')
+    } catch (err) {
+      ElMessage.error('喂食失败')
+    }
+  }
 }
 
 const handlePlay = async () => {
@@ -392,8 +401,14 @@ const handleBath = async () => {
   }
 }
 
-const handleRest = () => {
-  ElMessage.info('宠物正在休息中...')
+const handleRest = async () => {
+  try {
+    const data = await petApi.play()
+    petStore.$patch({ petInfo: data })
+    ElMessage.success('休息完成！体力恢复中...')
+  } catch (err) {
+    ElMessage.error('操作失败')
+  }
 }
 </script>
 

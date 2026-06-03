@@ -105,7 +105,8 @@ public class ChatService {
 
     private String callMiniMax(String context, List<ChatMessage> history, String userInput) {
         try {
-            String apiUrl = systemConfigService.getByKeyOrDefault("ai_api_url", "https://api.minimax.chat/v1/text/chatcompletion_v2");
+            String apiType = systemConfigService.getByKeyOrDefault("ai_api_type", "openai");
+            String apiUrl = systemConfigService.getByKey("ai_api_url");
             String apiKey = systemConfigService.getByKey("ai_api_key");
 
             if (apiKey == null || apiKey.isEmpty()) {
@@ -113,27 +114,35 @@ public class ChatService {
                 return getDefaultResponse(userInput);
             }
 
-            // 构建请求体
+            if (apiUrl == null || apiUrl.isEmpty()) {
+                apiUrl = "minimax".equals(apiType)
+                        ? "https://api.minimax.chat/v1/text/chatcompletion_v2"
+                        : "https://api.xiaomimimo.com/v1/chat/completions";
+            }
+
             String requestBody = buildRequestBody(context, history, userInput);
 
-            Request request = new Request.Builder()
+            Request.Builder reqBuilder = new Request.Builder()
                     .url(apiUrl)
-                    .addHeader("Authorization", "Bearer " + apiKey)
                     .addHeader("Content-Type", "application/json")
-                    .post(RequestBody.create(requestBody, JSON))
-                    .build();
+                    .post(RequestBody.create(requestBody, JSON));
 
-            try (Response response = okHttpClient.newCall(request).execute()) {
+            if ("minimax".equals(apiType)) {
+                reqBuilder.addHeader("Authorization", "Bearer " + apiKey);
+            } else {
+                reqBuilder.addHeader("api-key", apiKey);
+            }
+
+            try (Response response = okHttpClient.newCall(reqBuilder.build()).execute()) {
                 if (response.isSuccessful() && response.body() != null) {
                     String responseBody = response.body().string();
-                    return parseAiResponse(responseBody);
+                    return parseAiResponse(responseBody, apiType);
                 }
             }
         } catch (Exception e) {
-            log.error("MiniMax API调用失败", e);
+            log.error("AI API调用失败", e);
         }
 
-        // 降级返回默认回复
         return getDefaultResponse(userInput);
     }
 
@@ -154,10 +163,14 @@ public class ChatService {
         return sb.toString();
     }
 
-    private String parseAiResponse(String responseBody) {
+    private String parseAiResponse(String responseBody, String apiType) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
-            return root.path("choices").path(0).path("messages").path(0).path("content").asText();
+            if ("minimax".equals(apiType)) {
+                return root.path("choices").path(0).path("messages").path(0).path("content").asText();
+            }
+            // OpenAI 兼容格式（MiMo / DeepSeek / 通义等）
+            return root.path("choices").path(0).path("message").path("content").asText();
         } catch (Exception e) {
             log.error("解析AI响应失败", e);
             return getDefaultResponse("");

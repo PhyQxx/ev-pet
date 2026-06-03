@@ -122,35 +122,24 @@ const filteredAchievements = computed(() => {
 
 const loadAchievements = async () => {
   try {
-    const res = await achievementApi.getList()
-    if (res && res.data && Array.isArray(res.data.achievements) && res.data.achievements.length > 0) {
-      achievements.value = res.data.achievements.map(a => ({
-        id: a.id,
-        name: a.name || '',
-        description: a.description || '',
-        icon: a.icon || '🏆',
-        completed: a.completed || false,
-        claimed: a.claimed || false,
-        current: a.current || 0,
-        target: a.target || 1,
-        reward: a.reward || 0
-      }))
-    } else {
-      achievements.value = getMockAchievements()
-    }
+    const data = await achievementApi.getList()
+    const list = Array.isArray(data) ? data : (data?.achievements || [])
+    achievements.value = list.map(a => ({
+      id: a.id,
+      name: a.name || '',
+      description: a.description || '',
+      icon: a.icon || '🏆',
+      completed: a.completed || false,
+      claimed: a.claimed || false,
+      current: a.current || 0,
+      target: a.target || 1,
+      reward: a.reward || 0
+    }))
   } catch (e) {
-    achievements.value = getMockAchievements()
+    console.error('Failed to load achievements:', e)
+    achievements.value = []
   }
 }
-
-const getMockAchievements = () => [
-  { id: 1, name: '初次见面', description: '创建角色并领取第一只宠物', icon: '🌟', completed: true, claimed: true, current: 1, target: 1, reward: 50 },
-  { id: 2, name: '7天连续登录', description: '连续登录7天', icon: '📅', completed: false, claimed: false, current: 4, target: 7, reward: 100 },
-  { id: 3, name: '收集10种服装', description: '解锁10种不同服装/配饰', icon: '👗', completed: false, claimed: false, current: 3, target: 10, reward: 200 },
-  { id: 4, name: '充值任意金额', description: '完成首次充值', icon: '💎', completed: false, claimed: false, current: 0, target: 1, reward: 0 },
-  { id: 5, name: '打工达人', description: '打工累计获得1000金币', icon: '💼', completed: false, claimed: false, current: 580, target: 1000, reward: 150 },
-  { id: 6, name: '宠物进化', description: '将宠物进化到成长期', icon: '⬆️', completed: false, claimed: false, current: 0, target: 1, reward: 80 },
-]
 
 const claimReward = async (item) => {
   try {

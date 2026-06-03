@@ -1,17 +1,5 @@
 <template>
   <div class="social-page">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-logo">
-        <div class="topbar-logo-icon">🐾</div>
-        <span class="topbar-logo-text">EV Pet · 社交中心</span>
-      </div>
-      <div class="topbar-right">
-        <span>👤 {{ userStore.userInfo?.nickname || '裴浩宇' }}</span>
-        <div class="topbar-avatar">{{ petStore.petInfo?.emoji || '🐱' }}</div>
-      </div>
-    </div>
-
     <!-- Layout -->
     <div class="layout">
       <!-- Left Sidebar: Friends List -->
@@ -367,64 +355,58 @@ const photoWithPet = (friend) => {
 
 const loadSocialData = async () => {
   try {
-    // 加载好友列表
     const friendRes = await socialApi.getFriends()
-    if (friendRes.code === 200 && friendRes.data) {
-      friends.value = (friendRes.data.friends || []).map(f => ({
-        id: f.id,
-        name: f.nickname || '未知',
-        petName: f.petName || f.nickname || '未知',
-        petEmoji: f.petEmoji || '🐾',
-        petType: f.petType || '宠物',
-        level: f.level || 1,
-        status: f.status || 'sleeping',
-        bgColor: f.bgColor || '#FFD5E5',
-        online: f.online || false,
-        likes: f.likes || 0,
-        liked: f.liked || false,
-        stage: f.stage || '幼年期'
-      }))
-    }
+    const friendList = friendRes?.friends || (Array.isArray(friendRes) ? friendRes : [])
+    friends.value = friendList.map(f => ({
+      id: f.id,
+      name: f.nickname || '未知',
+      petName: f.petName || f.nickname || '未知',
+      petEmoji: f.petEmoji || '🐾',
+      petType: f.petType || '宠物',
+      level: f.level || 1,
+      status: f.status || 'sleeping',
+      bgColor: f.bgColor || '#FFD5E5',
+      online: f.online || false,
+      likes: f.likes || 0,
+      liked: f.liked || false,
+      stage: f.stage || '幼年期'
+    }))
   } catch (e) {
     console.error('加载好友列表失败', e)
   }
 
   try {
-    // 加载动态
     const postsRes = await socialApi.getPosts('recent')
-    if (postsRes.code === 200 && postsRes.data) {
-      posts.value = (postsRes.data.posts || []).map(p => ({
-        id: p.id,
-        userName: p.userName || '匿名',
-        petEmoji: p.petEmoji || '🐾',
-        bgColor: p.bgColor || '#FFD5E5',
-        time: p.createTime ? formatTimeAgo(p.createTime) : '刚刚',
-        location: p.location || '',
-        imageContent: p.imageContent || '',
-        imageBg: p.imageBg || 'linear-gradient(135deg, #FFF0F5, #F5F0FF)',
-        caption: p.content || '',
-        tags: p.tags || [],
-        liked: p.liked || false
-      }))
-    }
+    const postList = postsRes?.posts || (Array.isArray(postsRes) ? postsRes : [])
+    posts.value = postList.map(p => ({
+      id: p.id,
+      userName: p.userName || '匿名',
+      petEmoji: p.petEmoji || '🐾',
+      bgColor: p.bgColor || '#FFD5E5',
+      time: p.createTime ? formatTimeAgo(p.createTime) : '刚刚',
+      location: p.location || '',
+      imageContent: p.imageContent || '',
+      imageBg: p.imageBg || 'linear-gradient(135deg, #FFF0F5, #F5F0FF)',
+      caption: p.content || '',
+      tags: p.tags || [],
+      liked: p.liked || false
+    }))
   } catch (e) {
     console.error('加载动态失败', e)
   }
 
   try {
-    // 加载排行榜
     const rankRes = await socialApi.getRankings(rankType.value)
-    if (rankRes.code === 200 && rankRes.data) {
-      rankList.value = (rankRes.data.rankings || []).map((r, idx) => ({
-        id: r.id || idx,
-        name: r.nickname || '未知',
-        petEmoji: r.petEmoji || '🐾',
-        petType: r.petType || '宠物',
-        level: r.level || 1,
-        value: r.value || 0,
-        bgColor: ['#FFD5E5', '#D5AAFF', '#FFE5A0', '#A8D8EA', '#B8F1CC'][idx % 5]
-      }))
-    }
+    const rankData = rankRes?.rankings || (Array.isArray(rankRes) ? rankRes : [])
+    rankList.value = rankData.map((r, idx) => ({
+      id: r.id || idx,
+      name: r.nickname || '未知',
+      petEmoji: r.petEmoji || '🐾',
+      petType: r.petType || '宠物',
+      level: r.level || 1,
+      value: r.value || 0,
+      bgColor: ['#FFD5E5', '#D5AAFF', '#FFE5A0', '#A8D8EA', '#B8F1CC'][idx % 5]
+    }))
   } catch (e) {
     console.error('加载排行榜失败', e)
   }
@@ -450,8 +432,13 @@ const likePost = async (post) => {
   }
 }
 
-const commentPost = (post) => {
-  ElMessage.info('评论功能开发中...')
+const commentPost = async (post) => {
+  try {
+    await socialApi.addComment(post.id, '好可爱！')
+    ElMessage.success('评论成功！')
+  } catch (e) {
+    ElMessage.error('评论失败')
+  }
 }
 
 const sharePost = (post) => {
@@ -467,7 +454,22 @@ const searchFriend = async () => {
     ElMessage.warning('请输入好友ID或昵称')
     return
   }
-  ElMessage.info(`搜索 "${searchFriendInput.value}"...`)
+  try {
+    const res = await socialApi.getFriends()
+    const allFriends = res?.friends || []
+    const found = allFriends.find(f =>
+      (f.nickname || '').includes(searchFriendInput.value) ||
+      String(f.id) === searchFriendInput.value
+    )
+    if (found) {
+      ElMessage.success(`找到好友：${found.nickname}`)
+      showAddFriendModal.value = false
+    } else {
+      ElMessage.warning('未找到该好友')
+    }
+  } catch (e) {
+    ElMessage.error('搜索失败')
+  }
 }
 
 const acceptRequest = async (req) => {
@@ -499,61 +501,7 @@ onMounted(() => {
 @import '@/styles/ev-pet.scss';
 
 .social-page {
-  min-height: 100vh;
   background: $ev-bg-page;
-}
-
-.topbar {
-  background: linear-gradient(135deg, $ev-text, #6B5B8A);
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.topbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #fff;
-}
-
-.topbar-logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, $ev-primary, $ev-purple);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-}
-
-.topbar-logo-text {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: #fff;
-  font-size: 13px;
-}
-
-.topbar-avatar {
-  width: 30px;
-  height: 30px;
-  background: $ev-purple;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
 }
 
 .layout {

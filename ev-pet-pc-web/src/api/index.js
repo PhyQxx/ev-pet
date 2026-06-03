@@ -4,7 +4,7 @@ const BASE_URL = '/api'
 
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 100000,
   headers: { 'Content-Type': 'application/json' }
 })
 
@@ -50,6 +50,17 @@ export const auth = {
   deleteAccount() {
     return api.delete('/auth/account')
   }
+}
+
+// 用户
+export const user = {
+  getProfile() { return api.get('/user/profile') },
+  updateProfile(data) { return api.put('/user/profile', data) }
+}
+
+// 活动
+export const activities = {
+  getList() { return api.get('/activities') }
 }
 
 // 宠物

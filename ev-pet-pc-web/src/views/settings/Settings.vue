@@ -263,6 +263,9 @@
             <button class="btn">📱 绑定设备</button>
             <button class="btn" @click="switchAccount">🔄 切换账号</button>
           </div>
+          <div style="margin-top:20px;">
+            <button class="btn btn-logout" @click="logout">🚪 退出登录</button>
+          </div>
         </div>
 
         <!-- Account Deletion Warning -->
@@ -304,7 +307,7 @@ import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore, usePetStore } from '../../store'
-import { auth as authApi } from '../../api/index.js'
+import { auth as authApi, pet as petApi } from '../../api/index.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -332,18 +335,18 @@ const petName = computed({
 })
 
 const userInfo = ref({
-  id: 'EV20240415001',
-  nickname: userStore.userInfo?.nickname || '裴浩宇',
-  phone: '138****1234',
-  email: 'pei***@gmail.com',
-  bio: '和小甜饼一起生活的第42天！🐱✨',
-  gender: 'male',
-  birthday: '2000-01-01',
+  id: userStore.userInfo?.id ? `EV${userStore.userInfo.id}` : '---',
+  nickname: userStore.userInfo?.nickname || '用户',
+  phone: userStore.userInfo?.phone || '未绑定',
+  email: userStore.userInfo?.email || '未绑定',
+  bio: userStore.userInfo?.bio || '',
+  gender: userStore.userInfo?.gender || 'secret',
+  birthday: userStore.userInfo?.birthday || '',
   timezone: 'Asia/Shanghai',
-  tags: ['🌟 资深铲屎官', '🎨 装扮达人'],
-  createdAt: '2026-04-15',
-  vipStatus: '🌟 月卡会员',
-  vipExpire: '2026-05-15 到期'
+  tags: userStore.userInfo?.tags || [],
+  createdAt: userStore.userInfo?.createTime?.slice(0, 10) || '---',
+  vipStatus: userStore.userInfo?.vipStatus || '普通用户',
+  vipExpire: ''
 })
 
 const safeParse = (str, fallback) => {
@@ -386,9 +389,19 @@ watch(soundEffect, (v) => localStorage.setItem('soundEffect', v))
 watch(bgMusic, (v) => localStorage.setItem('bgMusic', v))
 watch(volume, (v) => localStorage.setItem('volume', v))
 
-const saveProfile = () => {
-  userStore.userInfo = { ...userStore.userInfo, nickname: userInfo.value.nickname }
-  ElMessage.success('个人信息已保存')
+const saveProfile = async () => {
+  try {
+    // Update pet name via API
+    if (petName.value && petName.value !== petStore.petInfo?.name) {
+      const updatedPet = await petApi.updateName(petName.value)
+      petStore.updatePet(updatedPet)
+    }
+    // Update nickname in store
+    userStore.updateUser({ ...userStore.userInfo, nickname: userInfo.value.nickname })
+    ElMessage.success('个人信息已保存')
+  } catch (err) {
+    ElMessage.error('保存失败，请重试')
+  }
 }
 
 const updatePassword = () => {
@@ -817,6 +830,19 @@ textarea.input-field {
 .btn-danger:hover {
   background: #FFF0F0;
   border-color: #FF6B6B;
+}
+
+.btn-logout {
+  width: 100%;
+  color: #7A6B8A;
+  border-color: $ev-purple-light;
+  background: #FAFAFA;
+}
+
+.btn-logout:hover {
+  background: $ev-primary-light;
+  border-color: $ev-primary;
+  color: $ev-primary-dark;
 }
 
 .btn-group {

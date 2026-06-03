@@ -1,17 +1,5 @@
 <template>
   <div class="work-page">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-logo">
-        <div class="topbar-logo-icon">🐾</div>
-        <span class="topbar-logo-text">EV Pet · PC 打工中心</span>
-      </div>
-      <div class="topbar-right">
-        <span>👤 {{ userStore.userInfo?.nickname || '裴浩宇' }}</span>
-        <div class="topbar-avatar">{{ petStore.petInfo?.emoji || '🐱' }}</div>
-      </div>
-    </div>
-
     <!-- Tabs -->
     <div class="tabbar">
       <div class="tab" :class="{ active: activeTab === 'jobs' }" @click="activeTab = 'jobs'">📋 打工</div>
@@ -553,61 +541,7 @@ onUnmounted(() => {
 @import '@/styles/ev-pet.scss';
 
 .work-page {
-  min-height: 100vh;
   background: $ev-bg-page;
-}
-
-.topbar {
-  background: linear-gradient(135deg, $ev-text, #6B5B8A);
-  padding: 14px 28px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.topbar-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #fff;
-}
-
-.topbar-logo-icon {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, $ev-primary, $ev-purple);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 17px;
-}
-
-.topbar-logo-text {
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: #fff;
-  font-size: 13px;
-}
-
-.topbar-avatar {
-  width: 30px;
-  height: 30px;
-  background: $ev-purple;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
 }
 
 .tabbar {

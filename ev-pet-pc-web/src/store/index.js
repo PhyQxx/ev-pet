@@ -39,6 +39,11 @@ export const useUserStore = defineStore('user', {
       this.updatePet(pet)
       return pet
     },
+    async fetchUserProfile() {
+      const profile = await import('../api').then(m => m.user.getProfile())
+      this.updateUser(profile)
+      return profile
+    },
     async feed() {
       const { pet } = await import('../api').then(m => m.pet.feed())
       this.updatePet(pet)

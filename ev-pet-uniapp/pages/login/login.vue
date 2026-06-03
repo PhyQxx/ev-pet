@@ -82,10 +82,42 @@ export default {
     }
   },
   methods: {
-    // 微信登录（简化版，实际需要微信SDK）
+    // 微信登录
     wechatLogin() {
       uni.showLoading({ title: '登录中...' })
-      auth.login({ loginType: 1, code: 'wechat_' + Date.now() })
+      // #ifdef MP-WEIXIN
+      uni.login({
+        provider: 'weixin',
+        success: (loginRes) => {
+          auth.login({ loginType: 1, code: loginRes.code })
+            .then(data => {
+              setToken(data.token)
+              setUserInfo(data.user)
+              uni.setStorageSync('petInfo', data.pet)
+              uni.hideLoading()
+              uni.showToast({ title: '登录成功', icon: 'success' })
+              setTimeout(() => {
+                uni.switchTab({ url: '/pages/index/index' })
+              }, 1000)
+            })
+            .catch(err => {
+              uni.hideLoading()
+              console.error('Login failed:', err)
+            })
+        },
+        fail: () => {
+          uni.hideLoading()
+          uni.showToast({ title: '微信登录失败', icon: 'none' })
+        }
+      })
+      // #endif
+      // #ifndef MP-WEIXIN
+      let deviceId = uni.getStorageSync('device_id')
+      if (!deviceId) {
+        deviceId = 'uni_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10)
+        uni.setStorageSync('device_id', deviceId)
+      }
+      auth.login({ loginType: 1, code: deviceId })
         .then(data => {
           setToken(data.token)
           setUserInfo(data.user)
@@ -100,12 +132,18 @@ export default {
           uni.hideLoading()
           console.error('Login failed:', err)
         })
+      // #endif
     },
     
     // 游客登录
     guestLogin() {
       uni.showLoading({ title: '进入中...' })
-      auth.login({ loginType: 2, phone: 'guest_' + Date.now() })
+      let deviceId = uni.getStorageSync('device_id')
+      if (!deviceId) {
+        deviceId = 'uni_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10)
+        uni.setStorageSync('device_id', deviceId)
+      }
+      auth.login({ loginType: 2, phone: deviceId })
         .then(data => {
           setToken(data.token)
           setUserInfo(data.user)

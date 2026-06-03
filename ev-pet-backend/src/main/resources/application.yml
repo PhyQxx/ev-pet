@@ -23,5 +23,5 @@ mybatis-plus:
       id-type: auto
 
 jwt:
-  secret: ${JWT_SECRET:ev-pet-secret-key-dev-only}
+  secret: ${JWT_SECRET:ev-pet-secret-key-dev-only-20260}
   expiration: 604800000

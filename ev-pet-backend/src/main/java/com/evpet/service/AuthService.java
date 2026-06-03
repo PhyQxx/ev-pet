@@ -26,22 +26,29 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public LoginVO login(LoginDTO dto) {
+    public LoginVO login(LoginDTO dto, String clientIp) {
         User user = null;
 
         if (dto.getLoginType() == 1) {
-            // 微信登录 - 简化版，实际应调微信API
+            // 微信登录
+            String openId = dto.getCode();
+            // 非真实微信code（前端生成的带前缀标识）则用IP标识
+            if (openId == null || openId.startsWith("web_") || openId.startsWith("uni_")) {
+                openId = "ip_" + clientIp;
+            }
+            final String finalOpenId = openId;
             user = userMapper.selectOne(new LambdaQueryWrapper<User>()
-                    .eq(User::getOpenId, dto.getCode()));
+                    .eq(User::getOpenId, finalOpenId));
             if (user == null) {
-                user = createUserByWechat(dto.getCode());
+                user = createUserByWechat(finalOpenId);
             }
         } else if (dto.getLoginType() == 2) {
-            // 手机号登录
+            // 游客/手机号登录 - 用IP标识
+            String identifier = "ip_" + clientIp;
             user = userMapper.selectOne(new LambdaQueryWrapper<User>()
-                    .eq(User::getPhone, dto.getPhone()));
+                    .eq(User::getPhone, identifier));
             if (user == null) {
-                user = createUserByPhone(dto.getPhone());
+                user = createUserByPhone(identifier);
             }
         }
 

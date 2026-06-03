@@ -55,6 +55,36 @@
       </div>
     </div>
 
+    <!-- AI Model Config Card -->
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-title">🤖 AI 模型配置</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">API 类型</div>
+          <el-select v-model="aiConfig.ai_api_type" style="margin-top:6px;width:100%;">
+            <el-option label="OpenAI 兼容（MiMo / DeepSeek / 通义等）" value="openai" />
+            <el-option label="MiniMax" value="minimax" />
+          </el-select>
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;">
+          <div class="form-label">模型名称</div>
+          <el-input v-model="aiConfig.ai_model" placeholder="如 mimo-v2.5-pro / MiniMax-Text-01" style="margin-top:6px;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;grid-column:1/-1;">
+          <div class="form-label">API 地址</div>
+          <el-input v-model="aiConfig.ai_api_url" placeholder="https://api.xiaomimimo.com/v1/chat/completions" style="margin-top:6px;" />
+        </div>
+        <div class="form-item" style="padding:12px;background:#FAFAFA;border-radius:12px;border:none;grid-column:1/-1;">
+          <div class="form-label">API Key</div>
+          <el-input v-model="aiConfig.ai_api_key" type="password" placeholder="请输入 API Key" show-password style="margin-top:6px;" />
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:14px;">
+        <button class="btn btn-primary" @click="saveAIConfig">💾 保存 AI 配置</button>
+        <button class="btn" @click="testAIConfig">🔍 测试连接</button>
+      </div>
+    </div>
+
     <!-- System Parameters Card -->
     <div class="card">
       <div class="card-title">🔧 系统参数配置</div>
@@ -168,6 +198,13 @@ const params = ref({
   maxLoginDays: 7
 })
 
+const aiConfig = ref({
+  ai_api_type: 'openai',
+  ai_api_url: '',
+  ai_api_key: '',
+  ai_model: ''
+})
+
 const admins = ref([])
 const roles = ref([])
 
@@ -237,6 +274,11 @@ const loadParams = async () => {
       if (p.dailyChatLimit) params.value.dailyChatLimit = parseInt(p.dailyChatLimit)
       if (p.workHealthCost) params.value.workHealthCost = parseInt(p.workHealthCost)
       if (p.maxLoginDays) params.value.maxLoginDays = parseInt(p.maxLoginDays)
+      // AI config
+      if (p.ai_api_type) aiConfig.value.ai_api_type = p.ai_api_type
+      if (p.ai_api_url) aiConfig.value.ai_api_url = p.ai_api_url
+      if (p.ai_api_key) aiConfig.value.ai_api_key = p.ai_api_key
+      if (p.ai_model) aiConfig.value.ai_model = p.ai_model
     }
   } catch (e) {
     console.error('加载系统参数失败', e)
@@ -311,6 +353,38 @@ const saveRole = async () => {
     }
   } catch (e) {
     ElMessage.error('保存失败')
+  }
+}
+
+const saveAIConfig = async () => {
+  try {
+    const configMap = {
+      ai_api_type: aiConfig.value.ai_api_type,
+      ai_api_url: aiConfig.value.ai_api_url,
+      ai_api_key: aiConfig.value.ai_api_key,
+      ai_model: aiConfig.value.ai_model
+    }
+    const res = await systemConfig.save(configMap)
+    if (res.code === 200) {
+      ElMessage.success('AI 配置已保存')
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (e) {
+    ElMessage.error('保存失败')
+  }
+}
+
+const testAIConfig = async () => {
+  try {
+    const res = await systemConfig.testAI()
+    if (res.code === 200) {
+      ElMessage.success(res.data || 'AI 服务连接正常')
+    } else {
+      ElMessage.error(res.message || '连接测试失败')
+    }
+  } catch (e) {
+    ElMessage.error('连接测试失败')
   }
 }
 

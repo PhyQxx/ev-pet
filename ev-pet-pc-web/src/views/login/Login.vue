@@ -81,9 +81,18 @@ const phone = ref('')
 const verifyCode = ref('')
 const countdown = ref(0)
 
+const getDeviceId = () => {
+  let id = localStorage.getItem('device_id')
+  if (!id) {
+    id = 'web_' + crypto.randomUUID()
+    localStorage.setItem('device_id', id)
+  }
+  return id
+}
+
 const wechatLogin = async () => {
   try {
-    const data = await auth.login({ loginType: 1, code: 'wechat_' + Date.now() })
+    const data = await auth.login({ loginType: 1, code: getDeviceId() })
     userStore.setUser(data.user, data.pet, data.token)
     ElMessage.success('登录成功')
     router.push('/')
@@ -94,7 +103,7 @@ const wechatLogin = async () => {
 
 const guestLogin = async () => {
   try {
-    const data = await auth.login({ loginType: 2, phone: 'guest_' + Date.now() })
+    const data = await auth.login({ loginType: 2, phone: getDeviceId() })
     userStore.setUser(data.user, data.pet, data.token)
     ElMessage.success('登录成功')
     router.push('/')

@@ -46,14 +46,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { activities as activitiesApi } from '../../api'
 
-const activities = ref([
-  { id: 1, name: '五一狂欢节', icon: '🎊', description: '五一假期期间登录游戏领取限定五一宠物，充值双倍金币', date: '4月30日-5月5日', participants: 12580, status: 'active', rewards: ['🐾 五一宠物', '💰 2倍金币', '🎁 宝箱'] },
-  { id: 2, name: '每日签到', icon: '📅', description: '每日签到可获得金币和随机道具，连续7天额外奖励', date: '长期活动', participants: 45820, status: 'active', rewards: ['💰 金币', '🎁 道具'] },
-  { id: 3, name: '宠物大赛', icon: '🏆', description: '提交您的宠物参加比赛，获胜者获得限定称号和稀有道具', date: '5月10日开启', participants: 0, status: 'upcoming', rewards: ['🏅 限定称号', '⭐ 稀有道具'] },
-  { id: 4, name: '春节活动', icon: '🧧', description: '春节期间特别活动，已圆满结束', date: '1月25日-2月10日', participants: 38450, status: 'ended', rewards: ['🧧 红包', '🐉 年兽宠物'] },
-])
+const activities = ref([])
+
+const loadActivities = async () => {
+  try {
+    const data = await activitiesApi.getList()
+    activities.value = Array.isArray(data) ? data : (data?.activities || [])
+  } catch (e) {
+    console.error('Failed to load activities:', e)
+    activities.value = []
+  }
+}
+
+onMounted(() => {
+  loadActivities()
+})
 </script>
 
 <style scoped>

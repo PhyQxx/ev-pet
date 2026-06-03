@@ -10,37 +10,33 @@
       <div class="stat-card">
         <div class="stat-icon stat-icon-gold">💰</div>
         <div class="stat-body">
-          <div class="stat-value">{{ userInfo?.gold || 2580 }}</div>
+          <div class="stat-value">{{ userInfo?.gold ?? 0 }}</div>
           <div class="stat-label">金币余额</div>
         </div>
-        <div class="stat-badge up">↑ 本周+520</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon stat-icon-exp">⭐</div>
         <div class="stat-body">
-          <div class="stat-value">{{ userInfo?.exp || 1850 }}</div>
+          <div class="stat-value">{{ userInfo?.exp ?? 0 }}</div>
           <div class="stat-label">经验值</div>
         </div>
-        <div class="stat-badge">进化进度 62%</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon stat-icon-diary">📝</div>
         <div class="stat-body">
-          <div class="stat-value">42</div>
-          <div class="stat-label">日记记录</div>
+          <div class="stat-value">{{ petInfo?.chatCount || 0 }}</div>
+          <div class="stat-label">对话次数</div>
         </div>
-        <div class="stat-badge up">↑ 本周+7</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-icon stat-icon-achievement">🏆</div>
         <div class="stat-body">
-          <div class="stat-value">8</div>
-          <div class="stat-label">成就达成</div>
+          <div class="stat-value">{{ petInfo?.level || 1 }}</div>
+          <div class="stat-label">宠物等级</div>
         </div>
-        <div class="stat-badge">再获 3 个解锁</div>
       </div>
     </div>
 
@@ -191,7 +187,7 @@
           <div class="ev-card mini-card recharge-card">
             <div class="recharge-info">
               <span class="recharge-icon">💰</span>
-              <span class="recharge-value">{{ userInfo?.gold || 2580 }} 金币余额</span>
+              <span class="recharge-value">{{ userInfo?.gold ?? 0 }} 金币余额</span>
             </div>
             <button class="ev-btn-secondary btn-sm" @click="$router.push('/shop')">充值</button>
           </div>
@@ -227,7 +223,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore, usePetStore } from '../../store'
-import { pet as petApi } from '../../api'
+import { pet as petApi, work as workApi } from '../../api'
 
 const userStore = useUserStore()
 const petStore = usePetStore()
@@ -270,16 +266,26 @@ const dailyTasks = ref([
 ])
 
 const actionMap = {
-  feed: { api: 'feed',   msg: '喂食成功~' },
-  bath: { api: 'bath',  msg: '清洁完成~' },
-  play: { api: 'play',  msg: '好开心~' },
-  work: { api: 'work',  msg: '打工完成，获得金币！' },
+  feed: { api: 'feed', msg: '喂食成功~' },
+  bath: { api: 'bath', msg: '清洁完成~' },
+  play: { api: 'play', msg: '好开心~' },
 }
 
 const doAction = async (type) => {
-  const { api, msg } = actionMap[type]
   loading.value = true
   try {
+    if (type === 'work') {
+      const info = await workApi.getInfo()
+      const available = info?.records?.find(r => r.status === 'available')
+      if (available) {
+        await workApi.start(available.id)
+        ElMessage.success('打工完成，获得金币！')
+      } else {
+        ElMessage.info('暂无可用工作')
+      }
+      return
+    }
+    const { api, msg } = actionMap[type]
     const data = await petApi[api]()
     petStore.$patch({ petInfo: data })
     ElMessage.success(msg)

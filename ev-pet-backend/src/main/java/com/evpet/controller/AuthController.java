@@ -5,6 +5,7 @@ import com.evpet.service.AuthService;
 import com.evpet.utils.JwtUtil;
 import com.evpet.vo.ApiResponse;
 import com.evpet.vo.LoginVO;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -18,13 +19,28 @@ public class AuthController {
     private final JwtUtil jwtUtil;
 
     @PostMapping("/login")
-    public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO dto) {
+    public ApiResponse<LoginVO> login(@Valid @RequestBody LoginDTO dto, HttpServletRequest request) {
         try {
-            LoginVO result = authService.login(dto);
+            String clientIp = getClientIp(request);
+            LoginVO result = authService.login(dto, clientIp);
             return ApiResponse.success(result);
         } catch (Exception e) {
             return ApiResponse.error("登录失败: " + e.getMessage());
         }
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 
     @GetMapping("/verify")

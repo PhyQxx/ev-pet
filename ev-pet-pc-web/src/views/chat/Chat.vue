@@ -94,7 +94,8 @@
               {{ msg.role === 'user' ? '👤' : petEmoji }}
             </div>
             <div class="msg-bubble" :class="msg.role === 'user' ? 'user' : 'pet'">
-              {{ msg.content }}
+              <template v-if="msg.role === 'user'">{{ msg.content }}</template>
+              <template v-else><div class="markdown-body" v-html="renderMarkdown(msg.content)"></div></template>
             </div>
           </div>
           <div class="msg-time" :style="msg.role === 'pet' ? 'margin-left: 38px' : ''">
@@ -151,8 +152,19 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { marked } from 'marked'
 import { usePetStore } from '@/store'
 import { chat as chatApi, pet as petApi } from '@/api'
+
+marked.setOptions({
+  breaks: true,
+  gfm: true
+})
+
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  return marked.parse(content)
+}
 
 const petStore = usePetStore()
 
@@ -783,5 +795,108 @@ onMounted(async () => {
 .send-btn svg {
   width: 18px;
   height: 18px;
+}
+
+/* Markdown Body */
+.markdown-body {
+  font-size: 14px;
+  line-height: 1.7;
+  word-break: break-word;
+}
+
+.markdown-body :deep(h1),
+.markdown-body :deep(h2),
+.markdown-body :deep(h3),
+.markdown-body :deep(h4) {
+  margin: 12px 0 6px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.markdown-body :deep(h1) { font-size: 18px; }
+.markdown-body :deep(h2) { font-size: 16px; }
+.markdown-body :deep(h3) { font-size: 15px; }
+.markdown-body :deep(h4) { font-size: 14px; }
+
+.markdown-body :deep(p) {
+  margin: 6px 0;
+}
+
+.markdown-body :deep(ul),
+.markdown-body :deep(ol) {
+  padding-left: 20px;
+  margin: 6px 0;
+}
+
+.markdown-body :deep(li) {
+  margin: 3px 0;
+}
+
+.markdown-body :deep(code) {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.markdown-body :deep(pre) {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+
+.markdown-body :deep(pre code) {
+  background: none;
+  padding: 0;
+  font-size: 13px;
+}
+
+.markdown-body :deep(blockquote) {
+  border-left: 3px solid $ev-purple;
+  padding-left: 12px;
+  margin: 8px 0;
+  color: $ev-text-sec;
+}
+
+.markdown-body :deep(table) {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+}
+
+.markdown-body :deep(th),
+.markdown-body :deep(td) {
+  border: 1px solid $ev-border;
+  padding: 6px 10px;
+  text-align: left;
+  font-size: 13px;
+}
+
+.markdown-body :deep(th) {
+  background: rgba(0, 0, 0, 0.04);
+  font-weight: 600;
+}
+
+.markdown-body :deep(a) {
+  color: $ev-primary-dark;
+  text-decoration: underline;
+}
+
+.markdown-body :deep(hr) {
+  border: none;
+  border-top: 1px solid $ev-border;
+  margin: 12px 0;
+}
+
+.markdown-body :deep(strong) {
+  font-weight: 700;
+}
+
+.markdown-body :deep(img) {
+  max-width: 100%;
+  border-radius: 8px;
 }
 </style>

@@ -189,7 +189,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { usePetStore, useUserStore } from '../../store'
 import { shop as shopApi } from '../../api'
@@ -339,6 +339,49 @@ const savePreset = () => {
   ElMessage.success(`装扮方案「${presetName.value}」已保存`)
   presetName.value = ''
 }
+
+const categoryMap = {
+  costumes: 'costumes',
+  hats: 'hats',
+  effects: 'effects',
+  backgrounds: 'backgrounds'
+}
+
+const rarityMap = { 1: '普通', 2: '稀有', 3: '史诗', 4: '传说' }
+const rarityTypeMap = { 1: 'common', 2: 'rare', 3: 'epic', 4: 'legend' }
+
+const mapItem = (item, ownedIds, equippedIds, slot) => ({
+  id: item.id,
+  name: item.name,
+  icon: item.icon || '🎁',
+  rarity: rarityMap[item.rarity] || '普通',
+  rarityType: rarityTypeMap[item.rarity] || 'common',
+  equipped: equippedIds.has(item.id),
+  unlocked: ownedIds.has(item.id),
+  slot
+})
+
+onMounted(async () => {
+  try {
+    const backpack = await shopApi.getBackpack()
+    const ownedIds = new Set((backpack || []).map(i => i.itemId || i.id))
+    const equippedIds = new Set((backpack || []).filter(i => i.equipped).map(i => i.itemId || i.id))
+
+    const [costumeItems, hatItems, effectItems, bgItems] = await Promise.all([
+      shopApi.getItems('costumes').catch(() => []),
+      shopApi.getItems('hats').catch(() => []),
+      shopApi.getItems('effects').catch(() => []),
+      shopApi.getItems('backgrounds').catch(() => [])
+    ])
+
+    if (costumeItems?.length) costumes.value = costumeItems.map(i => mapItem(i, ownedIds, equippedIds, '服装'))
+    if (hatItems?.length) hats.value = hatItems.map(i => mapItem(i, ownedIds, equippedIds, '发饰'))
+    if (effectItems?.length) effects.value = effectItems.map(i => mapItem(i, ownedIds, equippedIds, '特效'))
+    if (bgItems?.length) backgrounds.value = bgItems.map(i => mapItem(i, ownedIds, equippedIds, '背景'))
+  } catch (err) {
+    console.error('Failed to load studio items:', err)
+  }
+})
 </script>
 
 <style lang="scss" scoped>

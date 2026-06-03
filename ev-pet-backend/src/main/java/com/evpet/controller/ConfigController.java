@@ -48,6 +48,7 @@ public class ConfigController {
     @PostMapping("/test-ai")
     public ApiResponse<String> testAI() {
         try {
+            String apiType = systemConfigService.getByKeyOrDefault("ai_api_type", "openai");
             String apiUrl = systemConfigService.getByKey("ai_api_url");
             String apiKey = systemConfigService.getByKey("ai_api_key");
             String model = systemConfigService.getByKeyOrDefault("ai_model", "MiniMax-Text-01");
@@ -64,14 +65,18 @@ public class ConfigController {
                     model
             );
 
-            Request request = new Request.Builder()
+            Request.Builder reqBuilder = new Request.Builder()
                     .url(apiUrl)
-                    .addHeader("Authorization", "Bearer " + apiKey)
                     .addHeader("Content-Type", "application/json")
-                    .post(okhttp3.RequestBody.create(requestBody, MediaType.parse("application/json; charset=utf-8")))
-                    .build();
+                    .post(okhttp3.RequestBody.create(requestBody, MediaType.parse("application/json; charset=utf-8")));
 
-            try (Response response = okHttpClient.newCall(request).execute()) {
+            if ("minimax".equals(apiType)) {
+                reqBuilder.addHeader("Authorization", "Bearer " + apiKey);
+            } else {
+                reqBuilder.addHeader("api-key", apiKey);
+            }
+
+            try (Response response = okHttpClient.newCall(reqBuilder.build()).execute()) {
                 if (response.isSuccessful()) {
                     return ApiResponse.success("AI服务连接正常");
                 } else {
